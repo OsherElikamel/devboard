@@ -1,0 +1,43 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+dist/
+build/
+*.egg
+.venv/
+venv/
+env/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Node
+node_modules/
+
+# Environment
+.env
+!.env.example
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Build
+dist/
+*.log
+
+# Project-specific (design docs, screenshots, archives)
+stitch_sketches/
+stitch_markdown_project_builder*.zip
+the_front_code.md
+devboard_*.md
+Screenshot*.png
+
+# Claude Code
+.claude/
