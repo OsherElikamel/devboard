@@ -27,6 +27,7 @@ export default function DashboardPage() {
   const [data, setData] = useState<DashboardSummary | null>(null);
   const [loading, setLoading] = useState(true);
   const [expandedStat, setExpandedStat] = useState<StatFilter | null>(null);
+  const [selectedTechs, setSelectedTechs] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     const endpoint = isDemo ? '/demo/dashboard' : '/dashboard/summary';
@@ -42,16 +43,41 @@ export default function DashboardPage() {
     setExpandedStat((prev) => (prev === stat ? null : stat));
   };
 
-  const filteredProjects: Project[] = data
-    ? data.recent_projects
-        .filter((p) => {
-          if (!expandedStat || expandedStat === 'total') return true;
-          if (expandedStat === 'active') return p.status === 'in_progress';
-          if (expandedStat === 'deployed') return p.status === 'deployed';
-          return true;
-        })
-        .map((p) => normalizeProject(p as unknown as Record<string, unknown>))
+  const allProjects: Project[] = data
+    ? data.recent_projects.map((p) => normalizeProject(p as unknown as Record<string, unknown>))
     : [];
+
+  const filteredProjects: Project[] = allProjects.filter((p) => {
+    if (!expandedStat || expandedStat === 'total') return true;
+    if (expandedStat === 'active') return p.status === 'in_progress';
+    if (expandedStat === 'deployed') return p.status === 'deployed';
+    return true;
+  });
+
+  const toggleTech = (tech: string) => {
+    setSelectedTechs((prev) => {
+      const next = new Set(prev);
+      if (next.has(tech)) next.delete(tech);
+      else next.add(tech);
+      return next;
+    });
+  };
+
+  const techProjectCounts: Record<string, number> = {};
+  for (const p of allProjects) {
+    for (const t of p.technologies) {
+      techProjectCounts[t.name] = (techProjectCounts[t.name] || 0) + 1;
+    }
+  }
+
+  const techFilteredProjects = allProjects.filter((p) => {
+    if (selectedTechs.size === 0) return true;
+    const projectTechNames = new Set(p.technologies.map((t) => t.name));
+    for (const tech of selectedTechs) {
+      if (!projectTechNames.has(tech)) return false;
+    }
+    return true;
+  });
 
   return (
     <>
@@ -144,16 +170,37 @@ export default function DashboardPage() {
               </div>
 
               <div className="rounded-2xl p-6 border border-app-border bg-app-surface">
-                <h3 className="text-lg font-semibold text-app-text mb-4">Technologies Used</h3>
-                <div className="flex flex-wrap gap-2">
-                  {data.technologies_used.map((tech) => (
-                    <span
-                      key={tech}
-                      className="px-3 py-1.5 rounded-full text-xs font-[family-name:var(--font-tech)] border border-app-border text-app-text-secondary hover:border-accent/50 hover:text-accent transition-colors cursor-default"
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-semibold text-app-text">Technologies Used</h3>
+                  {selectedTechs.size > 0 && (
+                    <button
+                      onClick={() => setSelectedTechs(new Set())}
+                      className="text-xs text-app-text-muted hover:text-accent transition-colors"
                     >
-                      {tech}
-                    </span>
-                  ))}
+                      Clear filters
+                    </button>
+                  )}
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {data.technologies_used.map((tech) => {
+                    const isSelected = selectedTechs.has(tech);
+                    return (
+                      <button
+                        key={tech}
+                        onClick={() => toggleTech(tech)}
+                        className={`px-3 py-1.5 rounded-full text-xs font-[family-name:var(--font-tech)] border transition-all duration-200 ${
+                          isSelected
+                            ? 'border-accent bg-accent/15 text-accent shadow-[0_0_12px_rgba(56,189,248,0.15)]'
+                            : 'border-app-border text-app-text-secondary hover:border-accent/50 hover:text-accent'
+                        }`}
+                      >
+                        {tech}
+                        <span className={`ml-1.5 ${isSelected ? 'text-accent/70' : 'text-app-text-muted'}`}>
+                          {techProjectCounts[tech] || 0}
+                        </span>
+                      </button>
+                    );
+                  })}
                 </div>
                 <div className="mt-6 pt-4 border-t border-app-border">
                   <div className="flex justify-between text-sm mb-2">
@@ -171,17 +218,42 @@ export default function DashboardPage() {
             </div>
 
             <div>
-              <h3 className="text-lg font-semibold text-app-text mb-4">Featured Projects</h3>
-              <p className="text-sm text-app-text-muted mb-4">High-priority development tracks currently in focus.</p>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {data.recent_projects.slice(0, 3).map((project) => (
-                  <ProjectCard
-                    key={project.id}
-                    project={normalizeProject(project as unknown as Record<string, unknown>)}
-                    isDemo={isDemo}
-                  />
-                ))}
+              <div className="flex items-center justify-between mb-1">
+                <h3 className="text-lg font-semibold text-app-text">
+                  {selectedTechs.size > 0 ? 'Matching Projects' : 'Featured Projects'}
+                </h3>
+                {selectedTechs.size > 0 && (
+                  <span className="text-xs text-app-text-muted font-[family-name:var(--font-tech)]">
+                    {techFilteredProjects.length} of {allProjects.length} projects
+                  </span>
+                )}
               </div>
+              <p className="text-sm text-app-text-muted mb-4">
+                {selectedTechs.size > 0
+                  ? `Projects using ${[...selectedTechs].join(', ')}.`
+                  : 'High-priority development tracks currently in focus.'}
+              </p>
+              {techFilteredProjects.length === 0 ? (
+                <div className="rounded-2xl border border-app-border bg-app-surface py-12 text-center">
+                  <p className="text-sm text-app-text-muted">No projects match all selected technologies.</p>
+                  <button
+                    onClick={() => setSelectedTechs(new Set())}
+                    className="mt-2 text-xs text-accent hover:text-accent-hover transition-colors"
+                  >
+                    Clear filters
+                  </button>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {(selectedTechs.size > 0 ? techFilteredProjects : techFilteredProjects.slice(0, 3)).map((project) => (
+                    <ProjectCard
+                      key={project.id}
+                      project={project}
+                      isDemo={isDemo}
+                    />
+                  ))}
+                </div>
+              )}
             </div>
           </>
         )}
