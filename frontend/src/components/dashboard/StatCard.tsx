@@ -7,14 +7,19 @@ interface Props {
   icon: LucideIcon;
   subtitle?: string;
   accent?: boolean;
+  onClick?: () => void;
+  active?: boolean;
 }
 
-export default function StatCard({ label, value, icon: Icon, subtitle, accent }: Props) {
+export default function StatCard({ label, value, icon: Icon, subtitle, accent, onClick, active }: Props) {
   return (
     <motion.div
       whileHover={{ y: -4, borderColor: 'rgba(56,189,248,0.3)' }}
       transition={{ duration: 0.2 }}
-      className="rounded-2xl p-5 border border-app-border bg-app-surface backdrop-blur-sm hover:shadow-[0_0_30px_rgba(56,189,248,0.08)] transition-shadow"
+      onClick={onClick}
+      className={`rounded-2xl p-5 border bg-app-surface backdrop-blur-sm hover:shadow-[0_0_30px_rgba(56,189,248,0.08)] transition-shadow ${
+        onClick ? 'cursor-pointer' : ''
+      } ${active ? 'border-accent/50 shadow-[0_0_30px_rgba(56,189,248,0.12)]' : 'border-app-border'}`}
     >
       <div className="flex items-start justify-between">
         <div>

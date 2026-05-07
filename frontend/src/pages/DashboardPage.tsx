@@ -1,18 +1,32 @@
 import { useEffect, useState } from 'react';
-import { FolderKanban, Rocket, Activity, TrendingUp } from 'lucide-react';
+import { FolderKanban, Rocket, Activity, TrendingUp, ChevronRight } from 'lucide-react';
+import { AnimatePresence, motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import Topbar from '../components/layout/Topbar';
 import StatCard from '../components/dashboard/StatCard';
 import DonutChart from '../components/charts/DonutChart';
 import ProjectCard from '../components/projects/ProjectCard';
+import Badge from '../components/ui/Badge';
+import ProgressBar from '../components/ui/ProgressBar';
 import { useAuth } from '../contexts/AuthContext';
 import api from '../services/api';
 import { normalizeProject } from '../utils/format';
-import type { DashboardSummary } from '../types';
+import type { DashboardSummary, Project, ProjectStatus } from '../types';
+
+type StatFilter = 'total' | 'active' | 'deployed';
+
+const STAT_TITLES: Record<StatFilter, string> = {
+  total: 'All Projects',
+  active: 'Active Projects',
+  deployed: 'Deployed Projects',
+};
 
 export default function DashboardPage() {
   const { user, isDemo } = useAuth();
+  const navigate = useNavigate();
   const [data, setData] = useState<DashboardSummary | null>(null);
   const [loading, setLoading] = useState(true);
+  const [expandedStat, setExpandedStat] = useState<StatFilter | null>(null);
 
   useEffect(() => {
     const endpoint = isDemo ? '/demo/dashboard' : '/dashboard/summary';
@@ -23,6 +37,21 @@ export default function DashboardPage() {
   }, [isDemo]);
 
   const greeting = isDemo ? 'Welcome, Guest' : `Welcome back, ${user?.name || 'Developer'}`;
+
+  const toggleStat = (stat: StatFilter) => {
+    setExpandedStat((prev) => (prev === stat ? null : stat));
+  };
+
+  const filteredProjects: Project[] = data
+    ? data.recent_projects
+        .filter((p) => {
+          if (!expandedStat || expandedStat === 'total') return true;
+          if (expandedStat === 'active') return p.status === 'in_progress';
+          if (expandedStat === 'deployed') return p.status === 'deployed';
+          return true;
+        })
+        .map((p) => normalizeProject(p as unknown as Record<string, unknown>))
+    : [];
 
   return (
     <>
@@ -38,11 +67,74 @@ export default function DashboardPage() {
         ) : data && (
           <>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              <StatCard label="Total Projects" value={data.total_projects} icon={FolderKanban} subtitle={`+${data.projects_by_status.in_progress || 0} this month`} />
-              <StatCard label="Active Projects" value={data.projects_by_status.in_progress || 0} icon={Activity} subtitle="Current Sprints" />
-              <StatCard label="Deployed" value={data.projects_by_status.deployed || 0} icon={Rocket} subtitle="Live Production" />
+              <StatCard label="Total Projects" value={data.total_projects} icon={FolderKanban} subtitle={`+${data.projects_by_status.in_progress || 0} this month`} onClick={() => toggleStat('total')} active={expandedStat === 'total'} />
+              <StatCard label="Active Projects" value={data.projects_by_status.in_progress || 0} icon={Activity} subtitle="Current Sprints" onClick={() => toggleStat('active')} active={expandedStat === 'active'} />
+              <StatCard label="Deployed" value={data.projects_by_status.deployed || 0} icon={Rocket} subtitle="Live Production" onClick={() => toggleStat('deployed')} active={expandedStat === 'deployed'} />
               <StatCard label="Avg Progress" value={`${data.average_progress}%`} icon={TrendingUp} subtitle={`+${Math.min(data.average_progress, 15)}% vs last week`} accent />
             </div>
+
+            <AnimatePresence>
+              {expandedStat && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  transition={{ duration: 0.3, ease: 'easeInOut' }}
+                  className="overflow-hidden"
+                >
+                  <div className="rounded-2xl border border-accent/20 bg-app-surface p-5">
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="text-sm font-semibold text-app-text">
+                        {STAT_TITLES[expandedStat]}
+                        <span className="ml-2 text-app-text-muted font-normal">({filteredProjects.length})</span>
+                      </h3>
+                      <button
+                        onClick={() => setExpandedStat(null)}
+                        className="text-xs text-app-text-muted hover:text-app-text transition-colors"
+                      >
+                        Close
+                      </button>
+                    </div>
+
+                    {filteredProjects.length === 0 ? (
+                      <p className="text-sm text-app-text-muted py-4 text-center">No projects match this filter.</p>
+                    ) : (
+                      <div className="space-y-1">
+                        {filteredProjects.map((project) => (
+                          <motion.div
+                            key={project.id}
+                            whileHover={{ x: 4 }}
+                            onClick={() => navigate(`/projects/${project.id}`)}
+                            className="flex items-center gap-4 px-4 py-3 rounded-xl hover:bg-app-hover cursor-pointer transition-colors group"
+                          >
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2.5">
+                                <span className="text-sm font-medium text-app-text group-hover:text-accent transition-colors truncate">
+                                  {project.title}
+                                </span>
+                                <Badge status={project.status as ProjectStatus} />
+                              </div>
+                              <div className="flex items-center gap-3 mt-1.5">
+                                <div className="w-24">
+                                  <ProgressBar value={project.progress} size="sm" />
+                                </div>
+                                <span className="text-[11px] text-app-text-muted font-[family-name:var(--font-tech)]">
+                                  {project.progress}%
+                                </span>
+                                <span className="text-[11px] text-app-text-muted">
+                                  {project.tasks_completed}/{project.total_tasks} tasks
+                                </span>
+                              </div>
+                            </div>
+                            <ChevronRight size={14} className="text-app-text-muted group-hover:text-accent transition-colors shrink-0" />
+                          </motion.div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <div className="rounded-2xl p-6 border border-app-border bg-app-surface">
