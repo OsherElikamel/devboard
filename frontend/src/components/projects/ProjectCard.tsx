@@ -10,7 +10,7 @@ interface Props {
   isDemo?: boolean;
 }
 
-export default function ProjectCard({ project, isDemo }: Props) {
+export default function ProjectCard({ project }: Props) {
   const navigate = useNavigate();
 
   const handleClick = () => {
