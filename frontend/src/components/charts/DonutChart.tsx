@@ -18,12 +18,14 @@ const LABELS: Record<string, string> = {
 
 interface Props {
   data: Record<string, number>;
+  activeStatus?: string | null;
+  onStatusClick?: (statusKey: string) => void;
 }
 
-export default function DonutChart({ data }: Props) {
+export default function DonutChart({ data, activeStatus, onStatusClick }: Props) {
   const chartData = Object.entries(data)
     .filter(([, v]) => v > 0)
-    .map(([key, value]) => ({ name: LABELS[key] || key, value, color: COLORS[key] || '#64748B' }));
+    .map(([key, value]) => ({ key, name: LABELS[key] || key, value, color: COLORS[key] || '#64748B' }));
 
   const total = chartData.reduce((sum, d) => sum + d.value, 0);
 
@@ -40,9 +42,26 @@ export default function DonutChart({ data }: Props) {
       <div className="w-48 h-48 relative">
         <ResponsiveContainer>
           <PieChart>
-            <Pie data={chartData} cx="50%" cy="50%" innerRadius={55} outerRadius={80} paddingAngle={3} dataKey="value" stroke="none">
+            <Pie
+              data={chartData}
+              cx="50%"
+              cy="50%"
+              innerRadius={55}
+              outerRadius={80}
+              paddingAngle={3}
+              dataKey="value"
+              stroke="none"
+              cursor={onStatusClick ? 'pointer' : undefined}
+              onClick={onStatusClick ? (_, index) => onStatusClick(chartData[index].key) : undefined}
+            >
               {chartData.map((entry, i) => (
-                <Cell key={i} fill={entry.color} />
+                <Cell
+                  key={i}
+                  fill={entry.color}
+                  opacity={activeStatus && activeStatus !== entry.key ? 0.3 : 1}
+                  strokeWidth={activeStatus === entry.key ? 2 : 0}
+                  stroke={activeStatus === entry.key ? entry.color : 'none'}
+                />
               ))}
             </Pie>
             <Tooltip
@@ -57,9 +76,20 @@ export default function DonutChart({ data }: Props) {
       </div>
       <div className="space-y-2">
         {chartData.map((d) => (
-          <div key={d.name} className="flex items-center gap-2 text-sm">
-            <div className="w-3 h-3 rounded-full" style={{ backgroundColor: d.color }} />
-            <span className="text-app-text-secondary">{d.name}</span>
+          <div
+            key={d.name}
+            onClick={() => onStatusClick?.(d.key)}
+            className={`flex items-center gap-2 text-sm rounded-lg px-2 py-1 -mx-2 transition-all duration-200 ${
+              onStatusClick ? 'cursor-pointer hover:bg-app-hover' : ''
+            } ${activeStatus && activeStatus !== d.key ? 'opacity-40' : ''}`}
+          >
+            <div
+              className="w-3 h-3 rounded-full shrink-0 transition-transform duration-200"
+              style={{ backgroundColor: d.color, transform: activeStatus === d.key ? 'scale(1.3)' : undefined }}
+            />
+            <span className={`transition-colors duration-200 ${activeStatus === d.key ? 'text-app-text font-medium' : 'text-app-text-secondary'}`}>
+              {d.name}
+            </span>
             <span className="text-app-text font-medium ml-auto">{d.value}</span>
           </div>
         ))}

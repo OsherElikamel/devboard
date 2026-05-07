@@ -14,6 +14,13 @@ import { normalizeProject } from '../utils/format';
 import type { DashboardSummary, Project, ProjectStatus } from '../types';
 
 type StatFilter = 'total' | 'active' | 'deployed';
+const STATUS_LABELS: Record<string, string> = {
+  idea: 'Idea',
+  in_progress: 'In Progress',
+  testing: 'Testing',
+  deployed: 'Deployed',
+  archived: 'Archived',
+};
 
 const STAT_TITLES: Record<StatFilter, string> = {
   total: 'All Projects',
@@ -28,6 +35,7 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [expandedStat, setExpandedStat] = useState<StatFilter | null>(null);
   const [selectedTechs, setSelectedTechs] = useState<Set<string>>(new Set());
+  const [statusFilter, setStatusFilter] = useState<string | null>(null);
 
   useEffect(() => {
     const endpoint = isDemo ? '/demo/dashboard' : '/dashboard/summary';
@@ -70,11 +78,19 @@ export default function DashboardPage() {
     }
   }
 
-  const techFilteredProjects = allProjects.filter((p) => {
-    if (selectedTechs.size === 0) return true;
-    const projectTechNames = new Set(p.technologies.map((t) => t.name));
-    for (const tech of selectedTechs) {
-      if (!projectTechNames.has(tech)) return false;
+  const toggleStatus = (status: string) => {
+    setStatusFilter((prev) => (prev === status ? null : status));
+  };
+
+  const hasAnyFilter = selectedTechs.size > 0 || statusFilter !== null;
+
+  const featuredProjects = allProjects.filter((p) => {
+    if (statusFilter && p.status !== statusFilter) return false;
+    if (selectedTechs.size > 0) {
+      const projectTechNames = new Set(p.technologies.map((t) => t.name));
+      for (const tech of selectedTechs) {
+        if (!projectTechNames.has(tech)) return false;
+      }
     }
     return true;
   });
@@ -164,9 +180,19 @@ export default function DashboardPage() {
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <div className="rounded-2xl p-6 border border-app-border bg-app-surface">
-                <h3 className="text-lg font-semibold text-app-text mb-1">Project Status Distribution</h3>
+                <div className="flex items-center justify-between mb-1">
+                  <h3 className="text-lg font-semibold text-app-text">Project Status Distribution</h3>
+                  {statusFilter && (
+                    <button
+                      onClick={() => setStatusFilter(null)}
+                      className="text-xs text-app-text-muted hover:text-accent transition-colors"
+                    >
+                      Clear filter
+                    </button>
+                  )}
+                </div>
                 <p className="text-sm text-app-text-muted mb-4">Real-time health across lifecycle stages.</p>
-                <DonutChart data={data.projects_by_status} />
+                <DonutChart data={data.projects_by_status} activeStatus={statusFilter} onStatusClick={toggleStatus} />
               </div>
 
               <div className="rounded-2xl p-6 border border-app-border bg-app-surface">
@@ -174,7 +200,7 @@ export default function DashboardPage() {
                   <h3 className="text-lg font-semibold text-app-text">Technologies Used</h3>
                   {selectedTechs.size > 0 && (
                     <button
-                      onClick={() => setSelectedTechs(new Set())}
+                      onClick={() => { setSelectedTechs(new Set()); setStatusFilter(null); }}
                       className="text-xs text-app-text-muted hover:text-accent transition-colors"
                     >
                       Clear filters
@@ -220,24 +246,37 @@ export default function DashboardPage() {
             <div>
               <div className="flex items-center justify-between mb-1">
                 <h3 className="text-lg font-semibold text-app-text">
-                  {selectedTechs.size > 0 ? 'Matching Projects' : 'Featured Projects'}
+                  {hasAnyFilter ? 'Matching Projects' : 'Featured Projects'}
                 </h3>
-                {selectedTechs.size > 0 && (
+                {hasAnyFilter && (
                   <span className="text-xs text-app-text-muted font-[family-name:var(--font-tech)]">
-                    {techFilteredProjects.length} of {allProjects.length} projects
+                    {featuredProjects.length} of {allProjects.length} projects
                   </span>
                 )}
               </div>
-              <p className="text-sm text-app-text-muted mb-4">
-                {selectedTechs.size > 0
-                  ? `Projects using ${[...selectedTechs].join(', ')}.`
-                  : 'High-priority development tracks currently in focus.'}
-              </p>
-              {techFilteredProjects.length === 0 ? (
+              {hasAnyFilter ? (
+                <div className="flex flex-wrap items-center gap-2 mb-4">
+                  {statusFilter && (
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-[family-name:var(--font-tech)] border border-accent/30 bg-accent/10 text-accent">
+                      {STATUS_LABELS[statusFilter]}
+                      <button onClick={() => setStatusFilter(null)} className="hover:text-white transition-colors">&times;</button>
+                    </span>
+                  )}
+                  {[...selectedTechs].map((tech) => (
+                    <span key={tech} className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-[family-name:var(--font-tech)] border border-accent/30 bg-accent/10 text-accent">
+                      {tech}
+                      <button onClick={() => toggleTech(tech)} className="hover:text-white transition-colors">&times;</button>
+                    </span>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-app-text-muted mb-4">High-priority development tracks currently in focus.</p>
+              )}
+              {featuredProjects.length === 0 ? (
                 <div className="rounded-2xl border border-app-border bg-app-surface py-12 text-center">
-                  <p className="text-sm text-app-text-muted">No projects match all selected technologies.</p>
+                  <p className="text-sm text-app-text-muted">No projects match the selected filters.</p>
                   <button
-                    onClick={() => setSelectedTechs(new Set())}
+                    onClick={() => { setSelectedTechs(new Set()); setStatusFilter(null); }}
                     className="mt-2 text-xs text-accent hover:text-accent-hover transition-colors"
                   >
                     Clear filters
@@ -245,7 +284,7 @@ export default function DashboardPage() {
                 </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {(selectedTechs.size > 0 ? techFilteredProjects : techFilteredProjects.slice(0, 3)).map((project) => (
+                  {(hasAnyFilter ? featuredProjects : featuredProjects.slice(0, 3)).map((project) => (
                     <ProjectCard
                       key={project.id}
                       project={project}
