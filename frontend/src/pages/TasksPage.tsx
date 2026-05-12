@@ -132,7 +132,7 @@ export default function TasksPage() {
     <>
       <Topbar title="Tasks" subtitle={`${totalTodo} tasks remaining across ${groups.length} projects`} />
 
-      <div className="flex-1 p-8 space-y-6 overflow-y-auto">
+      <div className="flex-1 p-4 md:p-8 space-y-6 overflow-y-auto">
         <div className="flex flex-wrap gap-2">
           {FILTERS.map(f => (
             <button
@@ -168,7 +168,7 @@ export default function TasksPage() {
           </div>
         ) : (
           <div className="rounded-2xl border border-app-border bg-app-surface overflow-hidden">
-            <div className="flex items-center px-6 py-3 border-b border-app-border text-xs font-semibold text-app-text-muted uppercase tracking-wider font-[family-name:var(--font-tech)]">
+            <div className="hidden md:flex items-center px-6 py-3 border-b border-app-border text-xs font-semibold text-app-text-muted uppercase tracking-wider font-[family-name:var(--font-tech)]">
               <span className="w-8" />
               <span className="flex-1">Task</span>
               <span className="w-24 text-center">Priority</span>
@@ -226,7 +226,7 @@ export default function TasksPage() {
                           return (
                             <div
                               key={task.id}
-                              className="flex items-center px-6 py-2.5 border-b border-app-border last:border-b-0 hover:bg-app-hover transition-colors group"
+                              className="flex flex-wrap md:flex-nowrap items-center px-6 py-2.5 border-b border-app-border last:border-b-0 hover:bg-app-hover transition-colors group"
                             >
                               <button
                                 onClick={() => toggleTask(task, groupIdx)}
@@ -246,16 +246,26 @@ export default function TasksPage() {
                               >
                                 {task.title}
                               </span>
-                              <span className="w-24 flex justify-center">
+                              <span className="hidden md:flex w-24 justify-center">
                                 <PriorityDropdown priority={task.priority} onChange={p => changePriority(task, groupIdx, p)} />
                               </span>
-                              <span className="w-28 text-right">
+                              <span className="hidden md:block w-28 text-right">
                                 {due && (
                                   <span className={`text-xs font-[family-name:var(--font-tech)] inline-flex items-center gap-1 ${due.className}`}>
                                     <Clock size={12} /> {due.label}
                                   </span>
                                 )}
                               </span>
+                              {(task.priority !== 'medium' || due) && (
+                                <div className="flex md:hidden items-center gap-3 w-full ml-[30px] mt-1">
+                                  <PriorityDropdown priority={task.priority} onChange={p => changePriority(task, groupIdx, p)} />
+                                  {due && (
+                                    <span className={`text-xs font-[family-name:var(--font-tech)] inline-flex items-center gap-1 ${due.className}`}>
+                                      <Clock size={12} /> {due.label}
+                                    </span>
+                                  )}
+                                </div>
+                              )}
                             </div>
                           );
                         })}

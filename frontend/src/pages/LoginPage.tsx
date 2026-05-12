@@ -33,7 +33,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-dark-bg relative overflow-hidden">
+    <div className="min-h-screen flex items-center justify-center bg-app-bg relative overflow-hidden">
       <div className="absolute inset-0 bg-gradient-to-br from-accent/5 via-transparent to-accent-hover/5" />
       <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-accent/10 rounded-full blur-[120px]" />
       <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-accent-hover/8 rounded-full blur-[100px]" />
@@ -43,47 +43,47 @@ export default function LoginPage() {
           <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-accent to-accent-hover flex items-center justify-center mx-auto mb-4">
             <Code2 size={28} className="text-white" />
           </div>
-          <h1 className="text-2xl font-bold text-white">DevBoard</h1>
-          <p className="text-sm text-slate-500 mt-1 font-[family-name:var(--font-tech)] tracking-wide uppercase">Secure Developer Access</p>
+          <h1 className="text-2xl font-bold text-app-text">DevBoard</h1>
+          <p className="text-sm text-app-text-muted mt-1 font-[family-name:var(--font-tech)] tracking-wide uppercase">Secure Developer Access</p>
         </div>
 
-        <div className="rounded-2xl p-8 border border-white/[0.08] bg-dark-surface/80 backdrop-blur-xl shadow-[0_16px_40px_rgba(0,0,0,0.25)]">
-          <h2 className="text-xl font-semibold text-white mb-1">Welcome back to DevBoard</h2>
-          <p className="text-sm text-slate-500 mb-6">Enter your credentials to access your dashboard</p>
+        <div className="rounded-2xl p-8 border border-app-border bg-app-surface/80 backdrop-blur-xl shadow-[0_16px_40px_rgba(0,0,0,0.25)]">
+          <h2 className="text-xl font-semibold text-app-text mb-1">Welcome back to DevBoard</h2>
+          <p className="text-sm text-app-text-muted mb-6">Enter your credentials to access your dashboard</p>
 
           {error && <div className="mb-4 p-3 rounded-xl bg-danger/10 border border-danger/20 text-danger text-sm">{error}</div>}
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-xs font-medium text-slate-400 mb-1.5 font-[family-name:var(--font-tech)] tracking-wide uppercase">
+              <label className="block text-xs font-medium text-app-text-secondary mb-1.5 font-[family-name:var(--font-tech)] tracking-wide uppercase">
                 Work Email
               </label>
               <div className="relative">
-                <Mail size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
+                <Mail size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-app-text-muted" />
                 <input
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="name@company.com"
                   required
-                  className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-white/5 border border-white/[0.08] text-white placeholder-slate-600 text-sm focus:outline-none focus:border-accent transition-colors"
+                  className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-app-input border border-app-border text-app-text placeholder:text-app-text-muted text-sm focus:outline-none focus:border-accent transition-colors"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-xs font-medium text-slate-400 mb-1.5 font-[family-name:var(--font-tech)] tracking-wide uppercase">
+              <label className="block text-xs font-medium text-app-text-secondary mb-1.5 font-[family-name:var(--font-tech)] tracking-wide uppercase">
                 Password
               </label>
               <div className="relative">
-                <Lock size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
+                <Lock size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-app-text-muted" />
                 <input
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
                   required
-                  className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-white/5 border border-white/[0.08] text-white placeholder-slate-600 text-sm focus:outline-none focus:border-accent transition-colors"
+                  className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-app-input border border-app-border text-app-text placeholder:text-app-text-muted text-sm focus:outline-none focus:border-accent transition-colors"
                 />
               </div>
             </div>
@@ -100,13 +100,13 @@ export default function LoginPage() {
           <div className="mt-4">
             <button
               onClick={handleDemo}
-              className="w-full py-2.5 rounded-xl border border-white/[0.08] text-slate-400 font-medium text-sm hover:bg-white/5 hover:text-accent transition-all duration-200"
+              className="w-full py-2.5 rounded-xl border border-app-border text-app-text-secondary font-medium text-sm hover:bg-app-hover hover:text-accent transition-all duration-200"
             >
               Explore Demo Board
             </button>
           </div>
 
-          <p className="text-center text-sm text-slate-500 mt-6">
+          <p className="text-center text-sm text-app-text-muted mt-6">
             Need an account?{' '}
             <Link to="/register" className="text-accent hover:underline font-medium">Register</Link>
           </p>

@@ -46,7 +46,7 @@ export default function ProjectsPage() {
         subtitle={`Manage, deploy, and monitor your development infrastructure across ${projects.length} active environments.`}
       />
 
-      <div className="flex-1 p-8 space-y-6 overflow-y-auto">
+      <div className="flex-1 p-4 md:p-8 space-y-6 overflow-y-auto">
         <div className="flex flex-wrap gap-2">
           {STATUS_FILTERS.map(({ label, value }) => (
             <button

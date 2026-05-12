@@ -87,7 +87,7 @@ export default function CreateProjectModal() {
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
             transition={{ duration: 0.2 }}
-            className="relative w-full max-w-lg rounded-2xl border border-app-border bg-app-surface shadow-2xl overflow-hidden"
+            className="relative w-full max-w-lg max-h-[90vh] rounded-2xl border border-app-border bg-app-surface shadow-2xl overflow-hidden flex flex-col"
           >
             <div className="flex items-center justify-between px-6 py-4 border-b border-app-border">
               <h2 className="text-lg font-semibold text-app-text">New Project</h2>
@@ -100,7 +100,7 @@ export default function CreateProjectModal() {
               </button>
             </div>
 
-            <form onSubmit={handleSubmit} className="p-6 space-y-4">
+            <form onSubmit={handleSubmit} className="p-6 space-y-4 overflow-y-auto">
               {error && (
                 <div className="p-3 rounded-xl bg-danger/10 border border-danger/20 text-danger text-sm">
                   {error}

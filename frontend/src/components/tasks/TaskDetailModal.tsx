@@ -30,6 +30,7 @@ export default function TaskDetailModal({ task, projectTitle, onClose, onUpdate,
   const [comments, setComments] = useState<Comment[]>([]);
   const [newComment, setNewComment] = useState('');
   const [loadingComments, setLoadingComments] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
   const titleRef = useRef<HTMLInputElement>(null);
   const descRef = useRef<HTMLTextAreaElement>(null);
   const priorityRef = useRef<HTMLDivElement>(null);
@@ -41,6 +42,7 @@ export default function TaskDetailModal({ task, projectTitle, onClose, onUpdate,
       setEditingTitle(false);
       setEditingDesc(false);
       setShowPriorityMenu(false);
+      setConfirmDelete(false);
       loadComments(task.id);
     }
   }, [task?.id]);
@@ -209,13 +211,30 @@ export default function TaskDetailModal({ task, projectTitle, onClose, onUpdate,
               </div>
               <div className="flex items-center gap-2">
                 {!isDemo && (
-                  <button
-                    onClick={handleDelete}
-                    className="p-1.5 rounded-lg text-app-text-muted hover:text-danger hover:bg-danger/10 transition-colors"
-                    aria-label="Delete task"
-                  >
-                    <Trash2 size={16} />
-                  </button>
+                  confirmDelete ? (
+                    <div className="flex items-center gap-1.5">
+                      <button
+                        onClick={handleDelete}
+                        className="px-2.5 py-1 rounded-lg bg-danger/15 text-danger text-xs font-medium hover:bg-danger/25 transition-colors"
+                      >
+                        Delete
+                      </button>
+                      <button
+                        onClick={() => setConfirmDelete(false)}
+                        className="px-2.5 py-1 rounded-lg text-app-text-muted text-xs hover:bg-app-hover transition-colors"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => setConfirmDelete(true)}
+                      className="p-1.5 rounded-lg text-app-text-muted hover:text-danger hover:bg-danger/10 transition-colors"
+                      aria-label="Delete task"
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  )
                 )}
                 <button
                   onClick={onClose}

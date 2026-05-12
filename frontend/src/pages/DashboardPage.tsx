@@ -99,9 +99,9 @@ export default function DashboardPage() {
     <>
       <Topbar title="System Overview" subtitle={`${greeting}. Here's what's happening across your repositories today.`} />
 
-      <div className="flex-1 p-8 space-y-8 overflow-y-auto">
+      <div className="flex-1 p-4 md:p-8 space-y-8 overflow-y-auto">
         {loading ? (
-          <div className="grid grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {[...Array(4)].map((_, i) => (
               <div key={i} className="h-28 rounded-2xl bg-app-surface animate-pulse" />
             ))}

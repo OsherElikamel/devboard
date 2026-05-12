@@ -63,9 +63,14 @@
   --color-app-input: #F1F5F9;
 }
 
-* {
+.dark * {
   scrollbar-width: thin;
   scrollbar-color: #2D3654 transparent;
+}
+
+:root:not(.dark) * {
+  scrollbar-width: thin;
+  scrollbar-color: #CBD5E1 transparent;
 }
 
 body {

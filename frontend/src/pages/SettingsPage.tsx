@@ -10,7 +10,7 @@ export default function SettingsPage() {
     <>
       <Topbar title="User Preferences" subtitle="Manage your profile, account security, and dashboard interface settings." />
 
-      <div className="flex-1 p-8 space-y-6 overflow-y-auto">
+      <div className="flex-1 p-4 md:p-8 space-y-6 overflow-y-auto">
         {/* Profile */}
         <div className="rounded-2xl p-6 border border-app-border bg-app-surface">
           <h3 className="text-lg font-semibold text-app-text mb-4">Profile Settings</h3>

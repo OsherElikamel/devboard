@@ -57,6 +57,7 @@ export default function ProjectDetailsPage() {
   const statusRef = useRef<HTMLDivElement>(null);
 
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+  const [confirmingDeleteId, setConfirmingDeleteId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!id) return;
@@ -231,16 +232,16 @@ export default function ProjectDetailsPage() {
     <>
       <Topbar title={project.title} />
 
-      <div className="flex-1 p-8 space-y-6 overflow-y-auto">
+      <div className="flex-1 p-4 md:p-8 space-y-6 overflow-y-auto">
         <button onClick={() => navigate('/projects')} className="flex items-center gap-2 text-sm text-app-text-muted hover:text-accent transition-colors">
           <ArrowLeft size={16} /> Back to Projects
         </button>
 
         {/* Project Header */}
         <div className="rounded-2xl p-6 border border-app-border bg-app-surface">
-          <div className="flex items-start justify-between mb-4">
+          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-4">
             <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-3 mb-2">
+              <div className="flex flex-wrap items-center gap-3 mb-2">
                 {editingTitle ? (
                   <input
                     ref={titleRef}
@@ -306,7 +307,7 @@ export default function ProjectDetailsPage() {
                 </div>
               )}
             </div>
-            <div className="flex items-center gap-2 ml-4 shrink-0">
+            <div className="flex items-center gap-2 shrink-0">
               {project.github_url && (
                 <a href={project.github_url} target="_blank" rel="noopener noreferrer"
                   className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-app-border text-sm text-app-text-secondary hover:text-accent hover:border-accent/30 transition-colors">
@@ -440,9 +441,20 @@ export default function ProjectDetailsPage() {
                                 </span>
                               )}
                               {!isDemo && (
-                                <button onClick={() => deleteTask(task.id)} className="opacity-0 group-hover:opacity-100 p-1 text-app-text-muted hover:text-danger transition-all">
-                                  <Trash2 size={14} />
-                                </button>
+                                confirmingDeleteId === task.id ? (
+                                  <div className="flex items-center gap-1 shrink-0">
+                                    <button onClick={() => { deleteTask(task.id); setConfirmingDeleteId(null); }} className="px-2 py-0.5 rounded-lg bg-danger/15 text-danger text-xs font-medium hover:bg-danger/25 transition-colors">
+                                      Delete
+                                    </button>
+                                    <button onClick={() => setConfirmingDeleteId(null)} className="px-2 py-0.5 rounded-lg text-app-text-muted text-xs hover:bg-app-hover transition-colors">
+                                      Cancel
+                                    </button>
+                                  </div>
+                                ) : (
+                                  <button onClick={() => setConfirmingDeleteId(task.id)} className="opacity-0 group-hover:opacity-100 p-1 text-app-text-muted hover:text-danger transition-all">
+                                    <Trash2 size={14} />
+                                  </button>
+                                )
                               )}
                             </div>
                           );
@@ -489,9 +501,20 @@ export default function ProjectDetailsPage() {
                           </span>
                           <PriorityDropdown priority={task.priority} onChange={p => changePriority(task, p)} />
                           {!isDemo && (
-                            <button onClick={() => deleteTask(task.id)} className="opacity-0 group-hover:opacity-100 p-1 text-app-text-muted hover:text-danger transition-all">
-                              <Trash2 size={14} />
-                            </button>
+                            confirmingDeleteId === task.id ? (
+                              <div className="flex items-center gap-1 shrink-0">
+                                <button onClick={() => { deleteTask(task.id); setConfirmingDeleteId(null); }} className="px-2 py-0.5 rounded-lg bg-danger/15 text-danger text-xs font-medium hover:bg-danger/25 transition-colors">
+                                  Delete
+                                </button>
+                                <button onClick={() => setConfirmingDeleteId(null)} className="px-2 py-0.5 rounded-lg text-app-text-muted text-xs hover:bg-app-hover transition-colors">
+                                  Cancel
+                                </button>
+                              </div>
+                            ) : (
+                              <button onClick={() => setConfirmingDeleteId(task.id)} className="opacity-0 group-hover:opacity-100 p-1 text-app-text-muted hover:text-danger transition-all">
+                                <Trash2 size={14} />
+                              </button>
+                            )
                           )}
                         </div>
                       ))}
@@ -508,7 +531,7 @@ export default function ProjectDetailsPage() {
               <h3 className="text-lg font-semibold text-app-text">Activity</h3>
             </div>
 
-            <div className="flex-1 overflow-y-auto max-h-[600px] px-6 py-4 space-y-4">
+            <div className="flex-1 overflow-y-auto max-h-[400px] lg:max-h-[600px] px-6 py-4 space-y-4">
               {activity.length === 0 ? (
                 <p className="text-sm text-app-text-muted text-center py-8">No activity yet</p>
               ) : (
