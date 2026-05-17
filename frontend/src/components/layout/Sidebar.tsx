@@ -1,6 +1,9 @@
-import { LayoutDashboard, FolderKanban, CheckSquare, Settings, Code2, X } from 'lucide-react';
+import { LayoutDashboard, FolderKanban, CheckSquare, Settings, Shield, Code2, X } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
 import { useLayout } from '../../contexts/LayoutContext';
+import { useAuth } from '../../contexts/AuthContext';
+
+const ADMIN_EMAIL = 'oshercft@gmail.com';
 
 const navItems = [
   { to: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
@@ -11,6 +14,8 @@ const navItems = [
 
 export default function Sidebar() {
   const { sidebarOpen, closeSidebar } = useLayout();
+  const { user } = useAuth();
+  const isAdmin = user?.email === ADMIN_EMAIL;
 
   return (
     <>
@@ -64,6 +69,25 @@ export default function Sidebar() {
               <span className="transition-transform duration-200 group-hover:translate-x-0.5">{label}</span>
             </NavLink>
           ))}
+          {isAdmin && (
+            <>
+              <div className="my-2 border-t border-app-border/50" />
+              <NavLink
+                to="/admin"
+                onClick={closeSidebar}
+                className={({ isActive }) =>
+                  `flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 group ${
+                    isActive
+                      ? 'bg-accent/10 text-accent'
+                      : 'text-app-text-secondary hover:text-app-text hover:bg-app-hover'
+                  }`
+                }
+              >
+                <Shield size={18} className="transition-transform duration-200 group-hover:translate-x-0.5" />
+                <span className="transition-transform duration-200 group-hover:translate-x-0.5">Admin</span>
+              </NavLink>
+            </>
+          )}
         </nav>
       </aside>
     </>

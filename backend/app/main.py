@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.config import settings
-from app.routers import auth, comments, dashboard, demo, learning_notes, projects, tasks, technologies
+from app.routers import admin, auth, comments, dashboard, demo, learning_notes, projects, tasks, technologies
 
 app = FastAPI(title="DevBoard API", version="1.0.0")
 
@@ -14,6 +14,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+app.include_router(admin.router)
 app.include_router(auth.router)
 app.include_router(projects.router)
 app.include_router(tasks.router)

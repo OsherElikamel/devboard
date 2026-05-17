@@ -8,6 +8,7 @@ import ProjectsPage from '../pages/ProjectsPage';
 import ProjectDetailsPage from '../pages/ProjectDetailsPage';
 import SettingsPage from '../pages/SettingsPage';
 import TasksPage from '../pages/TasksPage';
+import AdminPage from '../pages/AdminPage';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { token, isDemo, isLoading } = useAuth();
@@ -34,6 +35,7 @@ export default function AppRoutes() {
         <Route path="/projects/:id" element={<ProjectDetailsPage />} />
         <Route path="/settings" element={<SettingsPage />} />
         <Route path="/tasks" element={<TasksPage />} />
+        <Route path="/admin" element={<AdminPage />} />
       </Route>
       <Route path="*" element={<Navigate to="/login" replace />} />
     </Routes>
