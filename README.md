@@ -8,6 +8,8 @@ A full-stack developer dashboard for tracking projects, tasks, and progress. Bui
 ![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker&logoColor=white)
 ![TypeScript](https://img.shields.io/badge/TypeScript-6.0-3178C6?logo=typescript&logoColor=white)
 
+**[Live Demo](https://devboard-frontend-tagh.onrender.com)** — hosted on Render (free tier, may take ~30s to wake)
+
 ## Features
 
 - **Project Management** — Create, edit, and track projects with status, progress, and tech stack tags
@@ -53,7 +55,7 @@ A full-stack developer dashboard for tracking projects, tasks, and progress. Bui
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/<your-username>/devboard.git
+   git clone https://github.com/OsherElikamel/devboard.git
    cd devboard
    ```
 
@@ -62,17 +64,8 @@ A full-stack developer dashboard for tracking projects, tasks, and progress. Bui
    docker compose up --build
    ```
 
-3. **Run database migrations**
-   ```bash
-   docker compose exec backend alembic upgrade head
-   ```
+3. **Open the app** (migrations and seed data run automatically on first start)
 
-4. **Seed demo data** (optional — creates a demo user with sample projects)
-   ```bash
-   docker compose exec backend python -m app.db.seed
-   ```
-
-5. **Open the app**
    - Frontend: [http://localhost:5173](http://localhost:5173)
    - API docs: [http://localhost:8000/docs](http://localhost:8000/docs)
    - pgAdmin: [http://localhost:5050](http://localhost:5050) (admin@devboard.local / admin)
