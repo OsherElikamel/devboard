@@ -7,11 +7,12 @@ from app.schemas.auth import LoginRequest, RegisterRequest, TokenResponse
 
 
 def register_user(db: Session, data: RegisterRequest) -> User:
-    existing = db.query(User).filter(User.email == data.email).first()
+    email = data.email.lower()
+    existing = db.query(User).filter(User.email == email).first()
     if existing:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Email already registered")
 
-    user = User(name=data.name, email=data.email, password_hash=hash_password(data.password))
+    user = User(name=data.name, email=email, password_hash=hash_password(data.password))
     db.add(user)
     db.commit()
     db.refresh(user)
@@ -19,7 +20,8 @@ def register_user(db: Session, data: RegisterRequest) -> User:
 
 
 def login_user(db: Session, data: LoginRequest) -> TokenResponse:
-    user = db.query(User).filter(User.email == data.email).first()
+    email = data.email.lower()
+    user = db.query(User).filter(User.email == email).first()
     if not user or not verify_password(data.password, user.password_hash):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
 
