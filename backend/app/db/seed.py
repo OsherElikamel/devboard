@@ -15,7 +15,8 @@ from app.models.user import User
 def seed():
     db = SessionLocal()
     try:
-        if db.query(User).first():
+        demo_user = db.query(User).filter(User.email == "alex@devboard.dev").first()
+        if demo_user:
             print("Database already seeded, skipping.")
             return
 
