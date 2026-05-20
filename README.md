@@ -10,6 +10,19 @@ A full-stack developer dashboard for tracking projects, tasks, and progress. Bui
 
 **[Live Demo](https://devboard-frontend-tagh.onrender.com)** — hosted on Render (free tier, may take ~30s to wake)
 
+[![Dashboard overview](docs/dashboard.png)](https://devboard-frontend-tagh.onrender.com)
+
+<details>
+<summary>More screenshots</summary>
+
+### Project Detail — Tasks & Activity
+![Project detail](docs/project-detail.png)
+
+### Light Mode
+![Dashboard light mode](docs/dashboard-light.png)
+
+</details>
+
 ## Features
 
 - **Project Management** — Create, edit, and track projects with status, progress, and tech stack tags
