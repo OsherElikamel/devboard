@@ -10,16 +10,34 @@ A full-stack developer dashboard for tracking projects, tasks, and progress. Bui
 
 **[Live Demo](https://devboard-frontend-tagh.onrender.com)** — hosted on Render (free tier, may take ~30s to wake)
 
-[![Dashboard overview](docs/dashboard.png)](https://devboard-frontend-tagh.onrender.com)
+![Dashboard](docs/main_dahsboard.png)
 
 <details>
 <summary>More screenshots</summary>
 
-### Project Detail — Tasks & Activity
-![Project detail](docs/project-detail.png)
+### Login
+![Login](docs/login_register.png)
 
-### Light Mode
-![Dashboard light mode](docs/dashboard-light.png)
+### Dashboard — Light Mode
+![Dashboard light mode](docs/main_dashboard_light_mode.png)
+
+### Projects
+![Projects](docs/projects_tab.png)
+
+### New Project
+![New project](docs/new_project_panel.png)
+
+### Project Detail
+![Project detail](docs/portfolio_project_selected.png)
+
+### All Projects Expanded
+![Total projects](docs/total_projects_selected.png)
+
+### Tasks
+![Tasks](docs/tasks_tab.png)
+
+### Settings
+![Settings](docs/settings_tab.png)
 
 </details>
 
