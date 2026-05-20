@@ -21,17 +21,17 @@ A full-stack developer dashboard for tracking projects, tasks, and progress. Bui
 ### Creating a New Project
 ![Creating a new project](docs/new_project_panel.png)
 
-### Projects
-![Projects](docs/projects_tab.png)
+### Projects Tab
+![Projects tab](docs/projects_tab.png)
 
-### Project Detail
-![Project detail](docs/portfolio_project_selected.png)
+### Project's Details
+![Project's details](docs/portfolio_project_selected.png)
 
-### Tasks
-![Tasks](docs/tasks_tab.png)
+### Tasks Tab
+![Tasks tab](docs/tasks_tab.png)
 
-### Settings
-![Settings](docs/settings_tab.png)
+### Settings Tab
+![Settings tab](docs/settings_tab.png)
 
 ### Dashboard, Light Mode
 ![Dashboard, light mode](docs/main_dashboard_light_mode.png)
