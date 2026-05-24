@@ -1,5 +1,6 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 
 from app.core.config import settings
 from app.routers import admin, auth, comments, dashboard, demo, learning_notes, projects, tasks, technologies
@@ -13,6 +14,11 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+@app.exception_handler(Exception)
+async def global_exception_handler(_request: Request, _exc: Exception):
+    return JSONResponse(status_code=500, content={"detail": "Internal server error"})
 
 app.include_router(admin.router)
 app.include_router(auth.router)

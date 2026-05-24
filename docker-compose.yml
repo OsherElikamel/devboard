@@ -30,6 +30,7 @@ services:
       JWT_ALGORITHM: HS256
       ACCESS_TOKEN_EXPIRE_MINUTES: 60
       BACKEND_CORS_ORIGINS: '["http://localhost:5173"]'
+      ADMIN_EMAIL: ''
     depends_on:
       - db
     volumes:

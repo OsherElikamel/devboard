@@ -140,22 +140,72 @@ devboard/
 
 ## API Endpoints
 
+### Auth
 | Method | Endpoint | Description |
 |--------|----------|-------------|
 | POST | `/api/auth/register` | Create account |
 | POST | `/api/auth/login` | Login (returns JWT) |
+| GET | `/api/auth/me` | Get current user |
+
+### Projects
+| Method | Endpoint | Description |
+|--------|----------|-------------|
 | GET | `/api/projects` | List user projects |
 | POST | `/api/projects` | Create project |
+| GET | `/api/projects/:id` | Get project details |
 | PATCH | `/api/projects/:id` | Update project |
 | DELETE | `/api/projects/:id` | Soft-delete project |
+| GET | `/api/projects/:id/activity` | Project activity feed |
+| POST | `/api/projects/:id/comments` | Add project comment |
+| GET | `/api/projects/:id/comments` | List project comments |
+
+### Tasks & Comments
+| Method | Endpoint | Description |
+|--------|----------|-------------|
 | GET | `/api/projects/:id/tasks` | List project tasks |
 | POST | `/api/projects/:id/tasks` | Create task |
 | PATCH | `/api/tasks/:id` | Update task |
 | DELETE | `/api/tasks/:id` | Delete task |
 | GET | `/api/tasks/:id/comments` | List task comments |
 | POST | `/api/tasks/:id/comments` | Add task comment |
-| GET | `/api/projects/:id/activity` | Project activity feed |
+| DELETE | `/api/comments/:id` | Delete comment |
+
+### Technologies
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/technologies` | List all technologies |
+| POST | `/api/technologies` | Create technology |
+| POST | `/api/projects/:id/technologies` | Attach technologies to project |
+| DELETE | `/api/projects/:id/technologies/:tid` | Detach technology |
+
+### Learning Notes
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/projects/:id/learning-notes` | List project notes |
+| POST | `/api/projects/:id/learning-notes` | Create note |
+| PATCH | `/api/learning-notes/:id` | Update note |
+| DELETE | `/api/learning-notes/:id` | Delete note |
+
+### Dashboard & Admin
+| Method | Endpoint | Description |
+|--------|----------|-------------|
 | GET | `/api/dashboard/summary` | Dashboard stats |
+| GET | `/api/health` | Health check |
+| GET | `/api/admin/stats` | Admin statistics |
+| GET | `/api/admin/users` | List all users |
+| DELETE | `/api/admin/users/:id` | Delete user |
+| GET | `/api/admin/projects` | List all projects |
+| DELETE | `/api/admin/projects/:id` | Delete project |
+
+### Demo (Guest Mode)
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/demo/dashboard` | Demo dashboard data |
+| GET | `/api/demo/projects` | Demo project list |
+| GET | `/api/demo/projects/:id` | Demo project detail |
+| GET | `/api/demo/projects/:id/tasks` | Demo project tasks |
+| GET | `/api/demo/projects/:id/activity` | Demo project activity |
+| GET | `/api/demo/tasks/:id/comments` | Demo task comments |
 
 ## Environment Variables
 
@@ -167,6 +217,7 @@ devboard/
 | `JWT_ALGORITHM` | JWT signing algorithm | `HS256` |
 | `ACCESS_TOKEN_EXPIRE_MINUTES` | Token expiry time | `60` |
 | `BACKEND_CORS_ORIGINS` | Allowed CORS origins (JSON array) | `["http://localhost:5173"]` |
+| `ADMIN_EMAIL` | Email of the admin user (enables `/api/admin` endpoints) | _(none)_ |
 
 ### Frontend (`frontend/.env.example`)
 | Variable | Description | Default |
