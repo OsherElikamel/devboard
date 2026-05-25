@@ -4,6 +4,7 @@ import Topbar from '../components/layout/Topbar';
 import ProjectCard from '../components/projects/ProjectCard';
 import { useAuth } from '../contexts/AuthContext';
 import api from '../services/api';
+import { normalizeProject } from '../utils/format';
 import type { Project, ProjectStatus } from '../types';
 
 const STATUS_FILTERS: { label: string; value: ProjectStatus | 'all' }[] = [
@@ -25,13 +26,8 @@ export default function ProjectsPage() {
     const endpoint = isDemo ? '/demo/projects' : '/projects';
     api.get(endpoint)
       .then((res) => {
-        const raw = res.data as any[];
-        setProjects(raw.map((p) => ({
-          ...p,
-          technologies: typeof p.technologies?.[0] === 'string'
-            ? (p.technologies as string[]).map((name: string, i: number) => ({ id: String(i), name, category: null }))
-            : p.technologies || [],
-        })));
+        const raw = res.data as Record<string, unknown>[];
+        setProjects(raw.map((p) => normalizeProject(p)));
       })
       .catch(console.error)
       .finally(() => setLoading(false));
@@ -82,7 +78,7 @@ export default function ProjectsPage() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {filtered.map((project) => (
-              <ProjectCard key={project.id} project={project} isDemo={isDemo} />
+              <ProjectCard key={project.id} project={project} />
             ))}
           </div>
         )}

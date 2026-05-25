@@ -65,8 +65,8 @@ export default function DonutChart({ data, activeStatus, onStatusClick }: Props)
               ))}
             </Pie>
             <Tooltip
-              contentStyle={{ background: '#101624', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px', fontSize: '13px' }}
-              itemStyle={{ color: '#F8FAFC' }}
+              contentStyle={{ background: 'var(--color-app-surface)', border: '1px solid var(--color-app-border)', borderRadius: '12px', fontSize: '13px' }}
+              itemStyle={{ color: 'var(--color-app-text)' }}
             />
           </PieChart>
         </ResponsiveContainer>

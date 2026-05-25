@@ -109,10 +109,10 @@ export default function DashboardPage() {
         ) : data && (
           <>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              <StatCard label="Total Projects" value={data.total_projects} icon={FolderKanban} subtitle={`+${data.projects_by_status.in_progress || 0} this month`} onClick={() => toggleStat('total')} active={expandedStat === 'total'} />
+              <StatCard label="Total Projects" value={data.total_projects} icon={FolderKanban} subtitle={`${data.projects_by_status.in_progress || 0} in progress`} onClick={() => toggleStat('total')} active={expandedStat === 'total'} />
               <StatCard label="Active Projects" value={data.projects_by_status.in_progress || 0} icon={Activity} subtitle="Current Sprints" onClick={() => toggleStat('active')} active={expandedStat === 'active'} />
               <StatCard label="Deployed" value={data.projects_by_status.deployed || 0} icon={Rocket} subtitle="Live Production" onClick={() => toggleStat('deployed')} active={expandedStat === 'deployed'} />
-              <StatCard label="Avg Progress" value={`${data.average_progress}%`} icon={TrendingUp} subtitle={`+${Math.min(data.average_progress, 15)}% vs last week`} accent />
+              <StatCard label="Avg Progress" value={`${data.average_progress}%`} icon={TrendingUp} subtitle="Across all projects" accent />
             </div>
 
             <AnimatePresence>
@@ -288,7 +288,6 @@ export default function DashboardPage() {
                     <ProjectCard
                       key={project.id}
                       project={project}
-                      isDemo={isDemo}
                     />
                   ))}
                 </div>

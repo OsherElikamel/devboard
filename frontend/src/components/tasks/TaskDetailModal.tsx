@@ -31,6 +31,7 @@ export default function TaskDetailModal({ task, projectTitle, onClose, onUpdate,
   const [newComment, setNewComment] = useState('');
   const [loadingComments, setLoadingComments] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [toast, setToast] = useState<string | null>(null);
   const titleRef = useRef<HTMLInputElement>(null);
   const descRef = useRef<HTMLTextAreaElement>(null);
   const priorityRef = useRef<HTMLDivElement>(null);
@@ -68,6 +69,12 @@ export default function TaskDetailModal({ task, projectTitle, onClose, onUpdate,
     return () => document.removeEventListener('mousedown', handleClick);
   }, []);
 
+  useEffect(() => {
+    if (!toast) return;
+    const t = setTimeout(() => setToast(null), 4000);
+    return () => clearTimeout(t);
+  }, [toast]);
+
   const loadComments = async (taskId: string) => {
     setLoadingComments(true);
     try {
@@ -96,8 +103,10 @@ export default function TaskDetailModal({ task, projectTitle, onClose, onUpdate,
       onUpdate({ ...task, title: trimmed });
       return;
     }
-    const res = await api.patch(`/tasks/${task.id}`, { title: trimmed });
-    onUpdate(res.data);
+    try {
+      const res = await api.patch(`/tasks/${task.id}`, { title: trimmed });
+      onUpdate(res.data);
+    } catch { setToast('Failed to update title'); }
   };
 
   const saveDescription = async () => {
@@ -108,8 +117,10 @@ export default function TaskDetailModal({ task, projectTitle, onClose, onUpdate,
       onUpdate({ ...task, description: trimmed || null });
       return;
     }
-    const res = await api.patch(`/tasks/${task.id}`, { description: trimmed || null });
-    onUpdate(res.data);
+    try {
+      const res = await api.patch(`/tasks/${task.id}`, { description: trimmed || null });
+      onUpdate(res.data);
+    } catch { setToast('Failed to update description'); }
   };
 
   const toggleDone = async () => {
@@ -117,8 +128,10 @@ export default function TaskDetailModal({ task, projectTitle, onClose, onUpdate,
       onUpdate({ ...task, is_done: !task.is_done });
       return;
     }
-    const res = await api.patch(`/tasks/${task.id}`, { is_done: !task.is_done });
-    onUpdate(res.data);
+    try {
+      const res = await api.patch(`/tasks/${task.id}`, { is_done: !task.is_done });
+      onUpdate(res.data);
+    } catch { setToast('Failed to update task'); }
   };
 
   const changePriority = async (p: TaskPriority) => {
@@ -128,8 +141,10 @@ export default function TaskDetailModal({ task, projectTitle, onClose, onUpdate,
       onUpdate({ ...task, priority: p });
       return;
     }
-    const res = await api.patch(`/tasks/${task.id}`, { priority: p });
-    onUpdate(res.data);
+    try {
+      const res = await api.patch(`/tasks/${task.id}`, { priority: p });
+      onUpdate(res.data);
+    } catch { setToast('Failed to update priority'); }
   };
 
   const changeDueDate = async (dateStr: string) => {
@@ -137,8 +152,10 @@ export default function TaskDetailModal({ task, projectTitle, onClose, onUpdate,
       onUpdate({ ...task, due_date: dateStr || null });
       return;
     }
-    const res = await api.patch(`/tasks/${task.id}`, { due_date: dateStr || null });
-    onUpdate(res.data);
+    try {
+      const res = await api.patch(`/tasks/${task.id}`, { due_date: dateStr || null });
+      onUpdate(res.data);
+    } catch { setToast('Failed to update due date'); }
   };
 
   const submitComment = async (e: React.FormEvent) => {
@@ -160,9 +177,11 @@ export default function TaskDetailModal({ task, projectTitle, onClose, onUpdate,
       return;
     }
 
-    const res = await api.post(`/tasks/${task.id}/comments`, { content: newComment.trim() });
-    setComments(prev => [...prev, res.data]);
-    setNewComment('');
+    try {
+      const res = await api.post(`/tasks/${task.id}/comments`, { content: newComment.trim() });
+      setComments(prev => [...prev, res.data]);
+      setNewComment('');
+    } catch { setToast('Failed to post comment'); }
   };
 
   const handleDelete = () => {
@@ -433,6 +452,17 @@ export default function TaskDetailModal({ task, projectTitle, onClose, onUpdate,
               </div>
             </div>
           </motion.div>
+
+          {toast && (
+            <motion.div
+              initial={{ opacity: 0, y: 40 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 40 }}
+              className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[80] px-4 py-2.5 rounded-xl bg-danger/90 text-white text-sm font-medium shadow-lg"
+            >
+              {toast}
+            </motion.div>
+          )}
         </div>
       )}
     </AnimatePresence>

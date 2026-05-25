@@ -7,7 +7,6 @@ import ProgressBar from '../ui/ProgressBar';
 
 interface Props {
   project: Project;
-  isDemo?: boolean;
 }
 
 export default function ProjectCard({ project }: Props) {

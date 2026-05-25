@@ -9,5 +9,6 @@ class UserResponse(BaseModel):
     name: str
     email: EmailStr
     created_at: datetime
+    is_admin: bool = False
 
     model_config = {"from_attributes": True}

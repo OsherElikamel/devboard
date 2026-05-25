@@ -58,6 +58,7 @@ export default function ProjectDetailsPage() {
 
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [confirmingDeleteId, setConfirmingDeleteId] = useState<string | null>(null);
+  const [toast, setToast] = useState<string | null>(null);
 
   useEffect(() => {
     if (!id) return;
@@ -96,6 +97,12 @@ export default function ProjectDetailsPage() {
     return () => document.removeEventListener('mousedown', handleClick);
   }, []);
 
+  useEffect(() => {
+    if (!toast) return;
+    const t = setTimeout(() => setToast(null), 4000);
+    return () => clearTimeout(t);
+  }, [toast]);
+
   const todoTasks = tasks.filter(t => !t.is_done);
   const doneTasks = tasks.filter(t => t.is_done);
 
@@ -111,8 +118,10 @@ export default function ProjectDetailsPage() {
       setProject({ ...project, title: trimmed });
       return;
     }
-    const res = await api.patch(`/projects/${id}`, { title: trimmed });
-    setProject(prev => prev ? { ...prev, ...res.data, technologies: prev.technologies } : prev);
+    try {
+      const res = await api.patch(`/projects/${id}`, { title: trimmed });
+      setProject(prev => prev ? { ...prev, ...res.data, technologies: prev.technologies } : prev);
+    } catch { setToast('Failed to update title'); }
   };
 
   const saveProjectDesc = async () => {
@@ -124,8 +133,10 @@ export default function ProjectDetailsPage() {
       setProject({ ...project, description: trimmed || null });
       return;
     }
-    const res = await api.patch(`/projects/${id}`, { description: trimmed || null });
-    setProject(prev => prev ? { ...prev, ...res.data, technologies: prev.technologies } : prev);
+    try {
+      const res = await api.patch(`/projects/${id}`, { description: trimmed || null });
+      setProject(prev => prev ? { ...prev, ...res.data, technologies: prev.technologies } : prev);
+    } catch { setToast('Failed to update description'); }
   };
 
   const changeProjectStatus = async (s: ProjectStatus) => {
@@ -135,8 +146,10 @@ export default function ProjectDetailsPage() {
       setProject({ ...project, status: s });
       return;
     }
-    const res = await api.patch(`/projects/${id}`, { status: s });
-    setProject(prev => prev ? { ...prev, ...res.data, technologies: prev.technologies } : prev);
+    try {
+      const res = await api.patch(`/projects/${id}`, { status: s });
+      setProject(prev => prev ? { ...prev, ...res.data, technologies: prev.technologies } : prev);
+    } catch { setToast('Failed to update status'); }
   };
 
   const toggleTask = async (task: Task) => {
@@ -144,10 +157,12 @@ export default function ProjectDetailsPage() {
       setTasks(prev => prev.map(t => t.id === task.id ? { ...t, is_done: !t.is_done } : t));
       return;
     }
-    const res = await api.patch(`/tasks/${task.id}`, { is_done: !task.is_done });
-    setTasks(prev => prev.map(t => t.id === task.id ? res.data : t));
-    const pRes = await api.get(`/projects/${id}`);
-    setProject(prev => prev ? { ...prev, ...pRes.data, technologies: prev.technologies } : prev);
+    try {
+      const res = await api.patch(`/tasks/${task.id}`, { is_done: !task.is_done });
+      setTasks(prev => prev.map(t => t.id === task.id ? res.data : t));
+      const pRes = await api.get(`/projects/${id}`);
+      setProject(prev => prev ? { ...prev, ...pRes.data, technologies: prev.technologies } : prev);
+    } catch { setToast('Failed to update task'); }
   };
 
   const changePriority = async (task: Task, priority: TaskPriority) => {
@@ -156,18 +171,22 @@ export default function ProjectDetailsPage() {
       setTasks(prev => prev.map(t => t.id === task.id ? { ...t, priority } : t));
       return;
     }
-    const res = await api.patch(`/tasks/${task.id}`, { priority });
-    setTasks(prev => prev.map(t => t.id === task.id ? res.data : t));
+    try {
+      const res = await api.patch(`/tasks/${task.id}`, { priority });
+      setTasks(prev => prev.map(t => t.id === task.id ? res.data : t));
+    } catch { setToast('Failed to update priority'); }
   };
 
   const addTask = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newTask.trim() || isDemo) return;
-    const res = await api.post(`/projects/${id}/tasks`, { title: newTask.trim() });
-    setTasks(prev => [res.data, ...prev]);
-    setNewTask('');
-    const pRes = await api.get(`/projects/${id}`);
-    setProject(prev => prev ? { ...prev, ...pRes.data, technologies: prev.technologies } : prev);
+    try {
+      const res = await api.post(`/projects/${id}/tasks`, { title: newTask.trim() });
+      setTasks(prev => [res.data, ...prev]);
+      setNewTask('');
+      const pRes = await api.get(`/projects/${id}`);
+      setProject(prev => prev ? { ...prev, ...pRes.data, technologies: prev.technologies } : prev);
+    } catch { setToast('Failed to add task'); }
   };
 
   const submitComment = async (e: React.FormEvent) => {
@@ -189,10 +208,12 @@ export default function ProjectDetailsPage() {
       return;
     }
 
-    await api.post(`/projects/${id}/comments`, { content: newComment.trim() });
-    setNewComment('');
-    const aRes = await api.get(`/projects/${id}/activity`).catch(() => ({ data: [] }));
-    setActivity(aRes.data);
+    try {
+      await api.post(`/projects/${id}/comments`, { content: newComment.trim() });
+      setNewComment('');
+      const aRes = await api.get(`/projects/${id}/activity`).catch(() => ({ data: [] }));
+      setActivity(aRes.data);
+    } catch { setToast('Failed to post comment'); }
   };
 
   const deleteTask = async (taskId: string) => {
@@ -200,10 +221,12 @@ export default function ProjectDetailsPage() {
       setTasks(prev => prev.filter(t => t.id !== taskId));
       return;
     }
-    await api.delete(`/tasks/${taskId}`);
-    setTasks(prev => prev.filter(t => t.id !== taskId));
-    const pRes = await api.get(`/projects/${id}`);
-    setProject(prev => prev ? { ...prev, ...pRes.data, technologies: prev.technologies } : prev);
+    try {
+      await api.delete(`/tasks/${taskId}`);
+      setTasks(prev => prev.filter(t => t.id !== taskId));
+      const pRes = await api.get(`/projects/${id}`);
+      setProject(prev => prev ? { ...prev, ...pRes.data, technologies: prev.technologies } : prev);
+    } catch { setToast('Failed to delete task'); }
   };
 
   const handleTaskUpdate = (updated: Task) => {
@@ -586,6 +609,19 @@ export default function ProjectDetailsPage() {
         onUpdate={handleTaskUpdate}
         onDelete={deleteTask}
       />
+
+      <AnimatePresence>
+        {toast && (
+          <motion.div
+            initial={{ opacity: 0, y: 40 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 40 }}
+            className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[70] px-4 py-2.5 rounded-xl bg-danger/90 text-white text-sm font-medium shadow-lg"
+          >
+            {toast}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </>
   );
 }

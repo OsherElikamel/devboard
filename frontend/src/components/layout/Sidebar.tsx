@@ -3,8 +3,6 @@ import { NavLink } from 'react-router-dom';
 import { useLayout } from '../../contexts/LayoutContext';
 import { useAuth } from '../../contexts/AuthContext';
 
-const ADMIN_EMAIL = 'oshercft@gmail.com';
-
 const navItems = [
   { to: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
   { to: '/projects', icon: FolderKanban, label: 'Projects' },
@@ -15,7 +13,7 @@ const navItems = [
 export default function Sidebar() {
   const { sidebarOpen, closeSidebar } = useLayout();
   const { user } = useAuth();
-  const isAdmin = user?.email === ADMIN_EMAIL;
+  const isAdmin = user?.is_admin;
 
   return (
     <>

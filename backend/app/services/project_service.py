@@ -38,7 +38,7 @@ def _to_response(project: Project) -> ProjectResponse:
     )
 
 
-def _load_project(db: Session) -> list:
+def _load_project(db: Session):
     return (
         db.query(Project)
         .options(joinedload(Project.tasks), joinedload(Project.project_technologies).joinedload(ProjectTechnology.technology))

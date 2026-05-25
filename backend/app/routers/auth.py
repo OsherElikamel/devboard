@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
+from app.core.config import settings
 from app.core.dependencies import get_current_user
 from app.db.database import get_db
 from app.models.user import User
@@ -23,4 +24,6 @@ def login(data: LoginRequest, db: Session = Depends(get_db)):
 
 @router.get("/me", response_model=UserResponse)
 def me(current_user: User = Depends(get_current_user)):
-    return current_user
+    response = UserResponse.model_validate(current_user)
+    response.is_admin = bool(settings.ADMIN_EMAIL and current_user.email == settings.ADMIN_EMAIL)
+    return response

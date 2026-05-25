@@ -4,11 +4,8 @@ from fastapi import APIRouter, HTTPException
 
 router = APIRouter(prefix="/api/demo", tags=["Demo"])
 
-_now = datetime.now(timezone.utc)
-
-
 def _ago(**kwargs):
-    return (_now - timedelta(**kwargs)).isoformat()
+    return (datetime.now(timezone.utc) - timedelta(**kwargs)).isoformat()
 
 
 DEMO_TECHS = {
