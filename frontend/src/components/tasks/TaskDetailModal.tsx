@@ -49,7 +49,7 @@ export default function TaskDetailModal({ task, projectTitle, onClose, onUpdate,
     }
   };
 
-  // eslint-disable-next-line react-hooks/set-state-in-effect, react-hooks/exhaustive-deps
+  /* eslint-disable react-hooks/set-state-in-effect, react-hooks/exhaustive-deps */
   useEffect(() => {
     if (task) {
       setTitle(task.title);
@@ -61,6 +61,7 @@ export default function TaskDetailModal({ task, projectTitle, onClose, onUpdate,
       loadComments(task.id);
     }
   }, [task?.id]);
+  /* eslint-enable react-hooks/set-state-in-effect, react-hooks/exhaustive-deps */
 
   useEffect(() => {
     if (editingTitle && titleRef.current) titleRef.current.focus();

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X } from 'lucide-react';
 import { useLayout } from '../../contexts/LayoutContext';
+import { AxiosError } from 'axios';
 import api from '../../services/api';
 import type { ProjectStatus } from '../../types';
 
@@ -63,8 +64,9 @@ export default function CreateProjectModal() {
       const res = await api.post('/projects', payload);
       handleClose();
       navigate(`/projects/${res.data.id}`);
-    } catch (err: any) {
-      setError(err.response?.data?.detail || 'Failed to create project');
+    } catch (err) {
+      const message = err instanceof AxiosError ? err.response?.data?.detail : null;
+      setError(message || 'Failed to create project');
     } finally {
       setLoading(false);
     }

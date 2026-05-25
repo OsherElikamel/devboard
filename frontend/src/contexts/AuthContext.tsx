@@ -20,7 +20,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
   const [isDemo, setIsDemo] = useState(localStorage.getItem('devboard_demo') === 'true');
 
-  // eslint-disable-next-line react-hooks/set-state-in-effect
+  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     if (token) {
       api.get('/auth/me')
@@ -34,6 +34,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setIsLoading(false);
     }
   }, [token]);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   const login = async (newToken: string) => {
     localStorage.setItem('devboard_token', newToken);
