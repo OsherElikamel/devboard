@@ -63,12 +63,14 @@ export default function TasksPage() {
       ));
       return;
     }
-    const res = await api.patch(`/tasks/${task.id}`, { is_done: !task.is_done });
-    setGroups(prev => prev.map((g, i) =>
-      i === groupIdx
-        ? { ...g, tasks: g.tasks.map(t => t.id === task.id ? res.data : t) }
-        : g
-    ));
+    try {
+      const res = await api.patch(`/tasks/${task.id}`, { is_done: !task.is_done });
+      setGroups(prev => prev.map((g, i) =>
+        i === groupIdx
+          ? { ...g, tasks: g.tasks.map(t => t.id === task.id ? res.data : t) }
+          : g
+      ));
+    } catch { setError('Failed to update task'); }
   };
 
   const changePriority = async (task: Task, groupIdx: number, priority: TaskPriority) => {
@@ -81,12 +83,14 @@ export default function TasksPage() {
       ));
       return;
     }
-    const res = await api.patch(`/tasks/${task.id}`, { priority });
-    setGroups(prev => prev.map((g, i) =>
-      i === groupIdx
-        ? { ...g, tasks: g.tasks.map(t => t.id === task.id ? res.data : t) }
-        : g
-    ));
+    try {
+      const res = await api.patch(`/tasks/${task.id}`, { priority });
+      setGroups(prev => prev.map((g, i) =>
+        i === groupIdx
+          ? { ...g, tasks: g.tasks.map(t => t.id === task.id ? res.data : t) }
+          : g
+      ));
+    } catch { setError('Failed to update priority'); }
   };
 
   const handleTaskUpdate = (updated: Task) => {

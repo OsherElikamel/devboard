@@ -44,7 +44,7 @@ def admin_list_users(db: Session = Depends(get_db), _: User = Depends(require_ad
         .group_by(Project.user_id)
         .subquery()
     )
-    users = db.query(User).order_by(User.created_at.desc()).all()
+    users = db.query(User).filter(User.deleted_at.is_(None)).order_by(User.created_at.desc()).all()
     count_map = {row.user_id: row.count for row in db.query(project_counts).all()}
     return [
         {
@@ -60,12 +60,12 @@ def admin_list_users(db: Session = Depends(get_db), _: User = Depends(require_ad
 
 @router.delete("/users/{user_id}", status_code=204)
 def admin_delete_user(user_id: UUID, db: Session = Depends(get_db), admin: User = Depends(require_admin)):
-    user = db.query(User).filter(User.id == user_id).first()
+    user = db.query(User).filter(User.id == user_id, User.deleted_at.is_(None)).first()
     if not user:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
     if user.id == admin.id:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Cannot delete your own account")
-    db.delete(user)
+    user.deleted_at = datetime.now(timezone.utc)
     db.commit()
 
 

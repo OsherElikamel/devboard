@@ -61,9 +61,14 @@ export default function AdminPage() {
     const endpoint = deleteConfirm.type === 'user'
       ? `/admin/users/${deleteConfirm.id}`
       : `/admin/projects/${deleteConfirm.id}`;
-    await api.delete(endpoint);
-    setDeleteConfirm(null);
-    fetchAll();
+    try {
+      await api.delete(endpoint);
+      setDeleteConfirm(null);
+      fetchAll();
+    } catch {
+      setError('Failed to delete. Please try again.');
+      setDeleteConfirm(null);
+    }
   };
 
   if (loading) return <div className="flex-1 flex items-center justify-center"><p className="text-app-text-muted">Loading...</p></div>;
@@ -111,7 +116,7 @@ export default function AdminPage() {
                       <button
                         onClick={() => setDeleteConfirm({ type: 'user', id: u.id, name: `${u.name} (${u.email})` })}
                         className="p-1.5 rounded-lg text-app-text-muted hover:text-danger hover:bg-danger/10 transition-colors"
-                        title="Delete user"
+                        aria-label={`Delete user ${u.name}`}
                       >
                         <Trash2 size={15} />
                       </button>
@@ -158,7 +163,7 @@ export default function AdminPage() {
                       <button
                         onClick={() => setDeleteConfirm({ type: 'project', id: p.id, name: p.title })}
                         className="p-1.5 rounded-lg text-app-text-muted hover:text-danger hover:bg-danger/10 transition-colors"
-                        title="Delete project"
+                        aria-label={`Delete project ${p.title}`}
                       >
                         <Trash2 size={15} />
                       </button>

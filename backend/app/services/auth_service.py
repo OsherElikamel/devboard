@@ -21,7 +21,7 @@ def register_user(db: Session, data: RegisterRequest) -> User:
 
 def login_user(db: Session, data: LoginRequest) -> TokenResponse:
     email = data.email.lower()
-    user = db.query(User).filter(User.email == email).first()
+    user = db.query(User).filter(User.email == email, User.deleted_at.is_(None)).first()
     if not user or not verify_password(data.password, user.password_hash):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
 
