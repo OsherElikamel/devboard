@@ -20,6 +20,7 @@ export default function ProjectsPage() {
   const { isDemo } = useAuth();
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [filter, setFilter] = useState<ProjectStatus | 'all'>('all');
 
   useEffect(() => {
@@ -29,7 +30,7 @@ export default function ProjectsPage() {
         const raw = res.data as Record<string, unknown>[];
         setProjects(raw.map((p) => normalizeProject(p)));
       })
-      .catch(console.error)
+      .catch(() => setError('Failed to load projects'))
       .finally(() => setLoading(false));
   }, [isDemo]);
 
@@ -64,6 +65,10 @@ export default function ProjectsPage() {
             {[...Array(6)].map((_, i) => (
               <div key={i} className="h-64 rounded-2xl bg-app-surface animate-pulse" />
             ))}
+          </div>
+        ) : error ? (
+          <div className="rounded-2xl border border-danger/30 bg-danger/5 p-8 text-center">
+            <p className="text-sm text-danger">{error}</p>
           </div>
         ) : filtered.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20">

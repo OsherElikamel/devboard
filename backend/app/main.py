@@ -1,3 +1,5 @@
+import logging
+
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
@@ -5,19 +7,22 @@ from fastapi.responses import JSONResponse
 from app.core.config import settings
 from app.routers import admin, auth, comments, dashboard, demo, learning_notes, projects, tasks, technologies
 
+logger = logging.getLogger(__name__)
+
 app = FastAPI(title="DevBoard API", version="1.0.0")
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.BACKEND_CORS_ORIGINS,
     allow_credentials=True,
-    allow_methods=["*"],
+    allow_methods=["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
     allow_headers=["*"],
 )
 
 
 @app.exception_handler(Exception)
-async def global_exception_handler(_request: Request, _exc: Exception):
+async def global_exception_handler(_request: Request, exc: Exception):
+    logger.exception("Unhandled exception: %s", exc)
     return JSONResponse(status_code=500, content={"detail": "Internal server error"})
 
 app.include_router(admin.router)

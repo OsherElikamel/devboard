@@ -1,3 +1,4 @@
+from datetime import datetime, timezone
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -61,9 +62,9 @@ def admin_list_users(db: Session = Depends(get_db), _: User = Depends(require_ad
 def admin_delete_user(user_id: UUID, db: Session = Depends(get_db), admin: User = Depends(require_admin)):
     user = db.query(User).filter(User.id == user_id).first()
     if not user:
-        raise HTTPException(status_code=404, detail="User not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
     if user.id == admin.id:
-        raise HTTPException(status_code=400, detail="Cannot delete your own account")
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Cannot delete your own account")
     db.delete(user)
     db.commit()
 
@@ -100,8 +101,8 @@ def admin_list_projects(db: Session = Depends(get_db), _: User = Depends(require
 
 @router.delete("/projects/{project_id}", status_code=204)
 def admin_delete_project(project_id: UUID, db: Session = Depends(get_db), _: User = Depends(require_admin)):
-    project = db.query(Project).filter(Project.id == project_id).first()
+    project = db.query(Project).filter(Project.id == project_id, Project.deleted_at.is_(None)).first()
     if not project:
-        raise HTTPException(status_code=404, detail="Project not found")
-    db.delete(project)
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Project not found")
+    project.deleted_at = datetime.now(timezone.utc)
     db.commit()

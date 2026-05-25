@@ -33,6 +33,7 @@ export default function DashboardPage() {
   const navigate = useNavigate();
   const [data, setData] = useState<DashboardSummary | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [expandedStat, setExpandedStat] = useState<StatFilter | null>(null);
   const [selectedTechs, setSelectedTechs] = useState<Set<string>>(new Set());
   const [statusFilter, setStatusFilter] = useState<string | null>(null);
@@ -41,7 +42,7 @@ export default function DashboardPage() {
     const endpoint = isDemo ? '/demo/dashboard' : '/dashboard/summary';
     api.get(endpoint)
       .then((res) => setData(res.data))
-      .catch(console.error)
+      .catch(() => setError('Failed to load dashboard data'))
       .finally(() => setLoading(false));
   }, [isDemo]);
 
@@ -105,6 +106,10 @@ export default function DashboardPage() {
             {[...Array(4)].map((_, i) => (
               <div key={i} className="h-28 rounded-2xl bg-app-surface animate-pulse" />
             ))}
+          </div>
+        ) : error ? (
+          <div className="rounded-2xl border border-danger/30 bg-danger/5 p-8 text-center">
+            <p className="text-sm text-danger">{error}</p>
           </div>
         ) : data && (
           <>

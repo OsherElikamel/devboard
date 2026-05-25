@@ -23,6 +23,7 @@ export default function TasksPage() {
   const navigate = useNavigate();
   const [groups, setGroups] = useState<ProjectTasks[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [filter, setFilter] = useState<StatusFilter>('all');
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
@@ -45,7 +46,7 @@ export default function TasksPage() {
             .filter(g => g.tasks.length > 0)
         );
       })
-      .catch(console.error)
+      .catch(() => setError('Failed to load tasks'))
       .finally(() => setLoading(false));
   }, [isDemo]);
 
@@ -155,6 +156,10 @@ export default function TasksPage() {
             {[...Array(3)].map((_, i) => (
               <div key={i} className="h-48 rounded-2xl bg-app-surface animate-pulse" />
             ))}
+          </div>
+        ) : error ? (
+          <div className="rounded-2xl border border-danger/30 bg-danger/5 p-8 text-center">
+            <p className="text-sm text-danger">{error}</p>
           </div>
         ) : groups.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20">
