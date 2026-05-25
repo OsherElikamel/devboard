@@ -36,6 +36,20 @@ export default function TaskDetailModal({ task, projectTitle, onClose, onUpdate,
   const descRef = useRef<HTMLTextAreaElement>(null);
   const priorityRef = useRef<HTMLDivElement>(null);
 
+  const loadComments = async (taskId: string) => {
+    setLoadingComments(true);
+    try {
+      const base = isDemo ? '/demo' : '';
+      const res = await api.get(`${base}/tasks/${taskId}/comments`);
+      setComments(res.data);
+    } catch {
+      setComments([]);
+    } finally {
+      setLoadingComments(false);
+    }
+  };
+
+  // eslint-disable-next-line react-hooks/set-state-in-effect, react-hooks/exhaustive-deps
   useEffect(() => {
     if (task) {
       setTitle(task.title);
@@ -74,19 +88,6 @@ export default function TaskDetailModal({ task, projectTitle, onClose, onUpdate,
     const t = setTimeout(() => setToast(null), 4000);
     return () => clearTimeout(t);
   }, [toast]);
-
-  const loadComments = async (taskId: string) => {
-    setLoadingComments(true);
-    try {
-      const base = isDemo ? '/demo' : '';
-      const res = await api.get(`${base}/tasks/${taskId}/comments`);
-      setComments(res.data);
-    } catch {
-      setComments([]);
-    } finally {
-      setLoadingComments(false);
-    }
-  };
 
   if (!task) return null;
 

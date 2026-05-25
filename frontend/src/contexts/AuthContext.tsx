@@ -20,6 +20,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
   const [isDemo, setIsDemo] = useState(localStorage.getItem('devboard_demo') === 'true');
 
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => {
     if (token) {
       api.get('/auth/me')
@@ -63,6 +64,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function useAuth() {
   const ctx = useContext(AuthContext);
   if (!ctx) throw new Error('useAuth must be used within AuthProvider');

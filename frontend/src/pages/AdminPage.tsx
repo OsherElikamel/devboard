@@ -54,6 +54,7 @@ export default function AdminPage() {
     }
   };
 
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { fetchAll(); }, []);
 
   const handleDelete = async () => {

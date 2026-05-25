@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Code2, Mail, Lock, User } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import { AxiosError } from 'axios';
 import api from '../services/api';
 
 export default function RegisterPage() {
@@ -29,8 +30,9 @@ export default function RegisterPage() {
       const loginRes = await api.post('/auth/login', { email, password });
       await login(loginRes.data.access_token);
       navigate('/dashboard');
-    } catch (err: any) {
-      setError(err.response?.data?.detail || 'Registration failed');
+    } catch (err) {
+      const message = err instanceof AxiosError ? err.response?.data?.detail : null;
+      setError(message || 'Registration failed');
     } finally {
       setLoading(false);
     }
