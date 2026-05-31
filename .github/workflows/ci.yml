@@ -22,3 +22,36 @@ jobs:
       - run: npm ci
       - run: npm run lint
       - run: npm run build
+
+  backend:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: devboard_user
+          POSTGRES_PASSWORD: devboard_password
+          POSTGRES_DB: devboard_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U devboard_user -d devboard_test"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+    defaults:
+      run:
+        working-directory: backend
+    env:
+      DATABASE_URL: postgresql+psycopg://devboard_user:devboard_password@localhost:5432/devboard_test
+      JWT_SECRET_KEY: test-secret-key
+      TEST_DATABASE_URL: postgresql+psycopg://devboard_user:devboard_password@localhost:5432/devboard_test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: backend/requirements.txt
+      - run: pip install -r requirements.txt
+      - run: pytest -v
