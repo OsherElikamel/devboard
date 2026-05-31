@@ -9,7 +9,7 @@ from app.routers import admin, auth, comments, dashboard, demo, learning_notes, 
 
 logger = logging.getLogger(__name__)
 
-app = FastAPI(title="DevBoard API", version="1.0.0")
+app = FastAPI(title="DevBoard API", version="1.1.0")
 
 app.add_middleware(
     CORSMiddleware,
