@@ -7,6 +7,7 @@ from app.db.database import SessionLocal
 from app.models.comment import Comment
 from app.models.learning_note import LearningNote
 from app.models.project import Project
+from app.models.project_comment import ProjectComment  # noqa: F401
 from app.models.task import Task
 from app.models.technology import ProjectTechnology, Technology
 from app.models.user import User
