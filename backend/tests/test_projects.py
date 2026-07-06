@@ -51,6 +51,15 @@ def test_update_project(client, auth_headers):
     assert res.json()["status"] == "in_progress"
 
 
+def test_create_project_rejects_non_http_url(client, auth_headers):
+    res = client.post("/api/projects", json={
+        "title": "XSS Project",
+        "status": "idea",
+        "github_url": "javascript:alert(1)",
+    }, headers=auth_headers)
+    assert res.status_code == 422
+
+
 def test_delete_project(client, auth_headers):
     create_res = client.post("/api/projects", json={"title": "To Delete", "status": "idea"}, headers=auth_headers)
     project_id = create_res.json()["id"]
