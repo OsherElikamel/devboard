@@ -14,9 +14,17 @@ export function timeAgo(dateStr: string): string {
   return new Date(dateStr).toLocaleDateString();
 }
 
+/** Parse a date-only string (YYYY-MM-DD) in the local timezone.
+ *  `new Date('YYYY-MM-DD')` parses as UTC midnight, which shifts the day
+ *  for anyone west of UTC. */
+export function parseLocalDate(dateStr: string): Date {
+  const [year, month, day] = dateStr.split('-').map(Number);
+  return new Date(year, month - 1, day);
+}
+
 export function dueLabel(due: string | null): { label: string; className: string } | null {
   if (!due) return null;
-  const d = new Date(due);
+  const d = parseLocalDate(due);
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   const diff = Math.ceil((d.getTime() - today.getTime()) / 86400000);

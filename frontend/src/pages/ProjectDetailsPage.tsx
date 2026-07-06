@@ -13,7 +13,7 @@ import PriorityDropdown from '../components/tasks/PriorityDropdown';
 import TaskDetailModal from '../components/tasks/TaskDetailModal';
 import { useAuth } from '../contexts/AuthContext';
 import api from '../services/api';
-import { timeAgo, dueLabel, normalizeProject } from '../utils/format';
+import { timeAgo, dueLabel, normalizeProject, parseLocalDate } from '../utils/format';
 import type { Project, Task, TaskPriority, ActivityItem, ActivityType, ProjectStatus } from '../types';
 
 let _demoCommentId = 0;
@@ -370,7 +370,7 @@ export default function ProjectDetailsPage() {
                   <p className="text-xs text-app-text-muted mb-1">Started</p>
                   <p className="text-sm text-app-text-secondary flex items-center gap-1.5">
                     <Calendar size={13} />
-                    {new Date(project.start_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                    {parseLocalDate(project.start_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                   </p>
                 </div>
               )}
@@ -379,7 +379,7 @@ export default function ProjectDetailsPage() {
                   <p className="text-xs text-app-text-muted mb-1">Target</p>
                   <p className="text-sm text-app-text-secondary flex items-center gap-1.5">
                     <Calendar size={13} />
-                    {new Date(project.target_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                    {parseLocalDate(project.target_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                   </p>
                 </div>
               )}

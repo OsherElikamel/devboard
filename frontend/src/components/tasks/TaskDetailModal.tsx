@@ -6,7 +6,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import api from '../../services/api';
-import { timeAgo } from '../../utils/format';
+import { parseLocalDate, timeAgo } from '../../utils/format';
 import { PRIORITIES } from './priority-constants';
 import type { Task, TaskPriority, Comment } from '../../types';
 
@@ -193,7 +193,7 @@ export default function TaskDetailModal({ task, projectTitle, onClose, onUpdate,
 
   const dueInfo = (() => {
     if (!task.due_date) return null;
-    const d = new Date(task.due_date);
+    const d = parseLocalDate(task.due_date);
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const diff = Math.ceil((d.getTime() - today.getTime()) / 86400000);

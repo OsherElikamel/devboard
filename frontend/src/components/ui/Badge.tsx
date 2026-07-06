@@ -1,11 +1,11 @@
 import type { ProjectStatus, TaskPriority } from '../../types';
 
 const statusStyles: Record<ProjectStatus, string> = {
-  idea: 'bg-slate-500/20 text-slate-300 border-slate-500/30',
+  idea: 'bg-slate-500/20 text-slate-600 dark:text-slate-300 border-slate-500/30',
   in_progress: 'bg-accent/20 text-accent border-accent/30',
   testing: 'bg-warning/20 text-warning border-warning/30',
   deployed: 'bg-success/20 text-success border-success/30',
-  archived: 'bg-gray-500/20 text-gray-400 border-gray-500/30',
+  archived: 'bg-gray-500/20 text-gray-600 dark:text-gray-400 border-gray-500/30',
 };
 
 const statusLabels: Record<ProjectStatus, string> = {
@@ -17,7 +17,7 @@ const statusLabels: Record<ProjectStatus, string> = {
 };
 
 const priorityStyles: Record<TaskPriority, string> = {
-  low: 'bg-slate-500/20 text-slate-300 border-slate-500/30',
+  low: 'bg-slate-500/20 text-slate-600 dark:text-slate-300 border-slate-500/30',
   medium: 'bg-accent/20 text-accent border-accent/30',
   high: 'bg-danger/20 text-danger border-danger/30',
 };
