@@ -1,14 +1,20 @@
+import { lazy, Suspense } from 'react';
 import { Navigate, Route, Routes } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import AppShell from '../components/layout/AppShell';
 import LoginPage from '../pages/LoginPage';
 import RegisterPage from '../pages/RegisterPage';
-import DashboardPage from '../pages/DashboardPage';
-import ProjectsPage from '../pages/ProjectsPage';
-import ProjectDetailsPage from '../pages/ProjectDetailsPage';
-import SettingsPage from '../pages/SettingsPage';
-import TasksPage from '../pages/TasksPage';
-import AdminPage from '../pages/AdminPage';
+
+// Authenticated pages are code-split so the login screen doesn't pay
+// for recharts and the rest of the app up front.
+const DashboardPage = lazy(() => import('../pages/DashboardPage'));
+const ProjectsPage = lazy(() => import('../pages/ProjectsPage'));
+const ProjectDetailsPage = lazy(() => import('../pages/ProjectDetailsPage'));
+const SettingsPage = lazy(() => import('../pages/SettingsPage'));
+const TasksPage = lazy(() => import('../pages/TasksPage'));
+const AdminPage = lazy(() => import('../pages/AdminPage'));
+
+const pageFallback = <div className="flex-1 min-h-screen bg-app-bg" />;
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { token, isDemo, isLoading } = useAuth();
@@ -26,18 +32,20 @@ function GuestRoute({ children }: { children: React.ReactNode }) {
 
 export default function AppRoutes() {
   return (
-    <Routes>
-      <Route path="/login" element={<GuestRoute><LoginPage /></GuestRoute>} />
-      <Route path="/register" element={<GuestRoute><RegisterPage /></GuestRoute>} />
-      <Route element={<ProtectedRoute><AppShell /></ProtectedRoute>}>
-        <Route path="/dashboard" element={<DashboardPage />} />
-        <Route path="/projects" element={<ProjectsPage />} />
-        <Route path="/projects/:id" element={<ProjectDetailsPage />} />
-        <Route path="/settings" element={<SettingsPage />} />
-        <Route path="/tasks" element={<TasksPage />} />
-        <Route path="/admin" element={<AdminPage />} />
-      </Route>
-      <Route path="*" element={<Navigate to="/login" replace />} />
-    </Routes>
+    <Suspense fallback={pageFallback}>
+      <Routes>
+        <Route path="/login" element={<GuestRoute><LoginPage /></GuestRoute>} />
+        <Route path="/register" element={<GuestRoute><RegisterPage /></GuestRoute>} />
+        <Route element={<ProtectedRoute><AppShell /></ProtectedRoute>}>
+          <Route path="/dashboard" element={<DashboardPage />} />
+          <Route path="/projects" element={<ProjectsPage />} />
+          <Route path="/projects/:id" element={<ProjectDetailsPage />} />
+          <Route path="/settings" element={<SettingsPage />} />
+          <Route path="/tasks" element={<TasksPage />} />
+          <Route path="/admin" element={<AdminPage />} />
+        </Route>
+        <Route path="*" element={<Navigate to="/login" replace />} />
+      </Routes>
+    </Suspense>
   );
 }

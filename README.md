@@ -40,16 +40,17 @@ A full-stack developer dashboard for tracking projects, tasks, and progress. Bui
 
 ## Features
 
-- **Project Management** — Create, edit, and track projects with status, progress, and tech stack tags
-- **Task System** — Full task CRUD with priority levels (high/medium/low), due dates, and completion tracking
+- **Project Management** — Create, edit, and delete projects with status, progress tracking, and inline editing of titles, descriptions, and status badges
+- **Task System** — Full task CRUD with priority levels (high/medium/low), due dates, completion tracking, and a cross-project tasks view
 - **Task Detail View** — ClickUp-inspired task modal with inline-editable title, description, priority dropdown, and per-task comments
-- **Inline Editing** — Click to edit project titles, descriptions, and status badges directly on the page
+- **Tech Stack Tags** — Searchable technology picker per project; create new technologies inline and attach/detach with one click
+- **Learning Notes** — Capture what you learned building each project, with topic tags and inline editing
 - **Activity Feed** — Project-level comment threads with timestamped activity history
-- **Dashboard** — Overview with stat cards, project status donut chart, tech stack summary, and task completion metrics
-- **Dark/Light Theme** — Persistent theme toggle with CSS custom property system
-- **Guest Demo Mode** — Explore the full app without creating an account (pre-populated demo data)
-- **JWT Authentication** — Secure login/register with bcrypt password hashing
-- **Responsive Design** — Mobile-friendly with slide-out sidebar drawer
+- **Dashboard** — Stat cards, clickable project-status donut chart, tech stack filters, and task completion metrics
+- **Guest Demo Mode** — Fully interactive demo without an account: create, edit, and delete freely; nothing is persisted
+- **JWT Authentication** — Login/register with bcrypt password hashing and per-IP rate limiting on auth endpoints
+- **Dark/Light Theme** — Persistent theme toggle built on CSS custom properties (native widgets included via `color-scheme`)
+- **Responsive & Accessible** — Mobile-friendly slide-out sidebar, keyboard-navigable controls with visible focus rings, labelled icon buttons
 
 ## Tech Stack
 
@@ -69,10 +70,11 @@ A full-stack developer dashboard for tracking projects, tasks, and progress. Bui
 - PostgreSQL 16
 - JWT authentication (python-jose + bcrypt)
 - Pydantic v2 (validation)
+- slowapi (rate limiting)
 
 ### Infrastructure
-- Docker Compose (4 services: frontend, backend, db, pgadmin)
-- Hot-reload in development for both frontend and backend
+- Docker Compose for local development (frontend, backend, db, pgadmin — hot reload everywhere)
+- Production: Render (static frontend + backend web service) with Neon serverless PostgreSQL
 
 ## Quick Start
 
@@ -124,13 +126,14 @@ devboard/
 │   │   │   ├── charts/       # DonutChart
 │   │   │   ├── dashboard/    # StatCard
 │   │   │   ├── layout/       # AppShell, Sidebar, Topbar
-│   │   │   ├── projects/     # ProjectCard, CreateProjectModal
+│   │   │   ├── projects/     # ProjectCard, CreateProjectModal, TechnologyPicker, LearningNotesPanel
 │   │   │   ├── tasks/        # TaskDetailModal, PriorityDropdown
 │   │   │   └── ui/           # Badge, ProgressBar, ThemeToggle
-│   │   ├── contexts/         # AuthContext, LayoutContext
-│   │   ├── pages/            # Dashboard, Projects, Tasks, Settings
-│   │   ├── routes/           # Route definitions + guards
-│   │   ├── services/         # Axios API client
+│   │   ├── contexts/         # Auth, Layout, Theme, Toast
+│   │   ├── hooks/            # useDocumentTitle
+│   │   ├── pages/            # Dashboard, Projects, Tasks, Settings, Admin
+│   │   ├── routes/           # Route definitions + guards (code-split pages)
+│   │   ├── services/         # Typed API layer + in-memory demo adapter
 │   │   ├── types/            # TypeScript interfaces
 │   │   └── utils/            # Shared formatting utilities
 │   ├── Dockerfile
@@ -227,6 +230,16 @@ devboard/
 | Variable | Description | Default |
 |----------|-------------|---------|
 | `VITE_API_BASE_URL` | Backend API base URL | `http://localhost:8000/api` |
+
+## Deployment
+
+The live instance runs on free tiers:
+
+- **Frontend** — Render static site built from `frontend/` (`npm run build`, publish `dist/`), with a rewrite rule sending all paths to `/index.html` for SPA routing
+- **Backend** — Render web service running `alembic upgrade head && python -m app.db.seed && uvicorn app.main:app --host 0.0.0.0 --port $PORT` (migrations run on every deploy; seeding is a no-op unless `SEED_DEMO_DATA=true`)
+- **Database** — [Neon](https://neon.tech) serverless PostgreSQL (the config layer normalizes `postgres://` URLs to the `psycopg` driver automatically)
+
+Backend env vars on Render: everything from the table above, plus `FORWARDED_ALLOW_IPS=*` so uvicorn trusts Render's proxy headers and rate limiting sees real client IPs.
 
 ## License
 
