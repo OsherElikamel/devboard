@@ -37,7 +37,7 @@ export default function Sidebar() {
             </div>
             <div>
               <h1 className="text-lg font-bold text-app-text">DevBoard</h1>
-              <p className="text-[11px] font-[family-name:var(--font-tech)] text-app-text-muted">v1.0 MVP</p>
+              <p className="text-[11px] font-[family-name:var(--font-tech)] text-app-text-muted">Project tracker</p>
             </div>
           </div>
           <button

@@ -25,6 +25,9 @@ export default function PriorityDropdown({ priority, onChange }: Props) {
     <div className="relative" ref={ref}>
       <button
         onClick={e => { e.stopPropagation(); setOpen(v => !v); }}
+        aria-label={`Change priority (currently ${current.label})`}
+        aria-expanded={open}
+        aria-haspopup="menu"
         className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium font-[family-name:var(--font-tech)] border transition-colors hover:brightness-110 ${current.bg} ${current.color} ${current.border}`}
       >
         {current.label}

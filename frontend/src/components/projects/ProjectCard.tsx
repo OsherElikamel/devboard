@@ -21,6 +21,10 @@ export default function ProjectCard({ project }: Props) {
       whileHover={{ y: -4 }}
       transition={{ duration: 0.2 }}
       onClick={handleClick}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleClick(); } }}
+      aria-label={`Open project ${project.title}`}
       className="rounded-2xl p-5 border border-app-border bg-app-surface cursor-pointer transition-all duration-200 hover:border-accent/30 hover:shadow-[0_0_30px_rgba(56,189,248,0.08)] group"
     >
       <div className="flex items-start justify-between mb-3">

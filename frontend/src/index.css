@@ -77,6 +77,15 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* Keyboard navigation: visible focus ring on interactive elements.
+   Inputs keep their border-color focus treatment instead. */
+button:focus-visible,
+a:focus-visible,
+[role='button']:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
 /* Mobile browsers (iOS Safari in particular) zoom the whole page in when
    focusing an input with font-size < 16px, and stay zoomed afterwards. */
 @media (max-width: 767px) {
