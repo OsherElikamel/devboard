@@ -76,3 +76,13 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
+
+/* Mobile browsers (iOS Safari in particular) zoom the whole page in when
+   focusing an input with font-size < 16px, and stay zoomed afterwards. */
+@media (max-width: 767px) {
+  input,
+  select,
+  textarea {
+    font-size: 1rem;
+  }
+}

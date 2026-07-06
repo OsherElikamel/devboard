@@ -38,8 +38,8 @@ export default function DonutChart({ data, activeStatus, onStatusClick }: Props)
   }
 
   return (
-    <div className="flex items-center gap-6">
-      <div className="w-48 h-48 relative">
+    <div className="flex flex-col sm:flex-row items-center gap-6">
+      <div className="w-48 h-48 relative shrink-0">
         <ResponsiveContainer>
           <PieChart>
             <Pie
@@ -74,7 +74,7 @@ export default function DonutChart({ data, activeStatus, onStatusClick }: Props)
           <span className="text-2xl font-bold text-app-text">{total}</span>
         </div>
       </div>
-      <div className="space-y-2">
+      <div className="space-y-2 w-full sm:w-auto">
         {chartData.map((d) => (
           <div
             key={d.name}
