@@ -9,6 +9,7 @@ class Settings(BaseSettings):
     ADMIN_EMAIL: str = ""
     BACKEND_CORS_ORIGINS: list[str] = ["http://localhost:5173"]
     SEED_DEMO_DATA: bool = False
+    RATE_LIMIT_ENABLED: bool = True
 
     model_config = {"env_file": ".env", "extra": "ignore"}
 

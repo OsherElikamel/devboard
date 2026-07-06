@@ -7,9 +7,17 @@ from app.core.dependencies import get_current_user
 from app.db.database import get_db
 from app.models.user import User
 from app.schemas.task import TaskCreate, TaskResponse, TaskUpdate
-from app.services.task_service import create_task, delete_task, get_tasks, update_task
+from app.services.task_service import create_task, delete_task, get_all_user_tasks, get_tasks, update_task
 
 router = APIRouter(tags=["Tasks"])
+
+
+@router.get("/api/tasks", response_model=list[TaskResponse])
+def list_all_tasks(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    return get_all_user_tasks(db, current_user)
 
 
 @router.get("/api/projects/{project_id}/tasks", response_model=list[TaskResponse])

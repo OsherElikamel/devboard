@@ -3,13 +3,18 @@ import logging
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from slowapi import _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
 
 from app.core.config import settings
+from app.core.rate_limit import limiter
 from app.routers import admin, auth, comments, dashboard, demo, learning_notes, projects, tasks, technologies
 
 logger = logging.getLogger(__name__)
 
-app = FastAPI(title="DevBoard API", version="1.1.0")
+app = FastAPI(title="DevBoard API", version="1.2.0")
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 app.add_middleware(
     CORSMiddleware,

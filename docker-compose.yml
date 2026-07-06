@@ -37,6 +37,7 @@ services:
       BACKEND_CORS_ORIGINS: '["http://localhost:5173"]'
       ADMIN_EMAIL: ''
       SEED_DEMO_DATA: 'true'
+      RATE_LIMIT_ENABLED: 'false'
     depends_on:
       db:
         condition: service_healthy

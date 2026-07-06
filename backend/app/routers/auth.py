@@ -1,8 +1,9 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Request
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
 from app.core.dependencies import get_current_user
+from app.core.rate_limit import limiter
 from app.db.database import get_db
 from app.models.user import User
 from app.schemas.auth import LoginRequest, RegisterRequest, TokenResponse
@@ -13,12 +14,14 @@ router = APIRouter(prefix="/api/auth", tags=["Auth"])
 
 
 @router.post("/register", response_model=UserResponse, status_code=201)
-def register(data: RegisterRequest, db: Session = Depends(get_db)):
+@limiter.limit("20/hour")
+def register(request: Request, data: RegisterRequest, db: Session = Depends(get_db)):
     return register_user(db, data)
 
 
 @router.post("/login", response_model=TokenResponse)
-def login(data: LoginRequest, db: Session = Depends(get_db)):
+@limiter.limit("5/minute")
+def login(request: Request, data: LoginRequest, db: Session = Depends(get_db)):
     return login_user(db, data)
 
 

@@ -3,10 +3,22 @@ from uuid import UUID
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 
+from app.models.project import Project
 from app.models.task import Task
 from app.models.user import User
 from app.schemas.task import TaskCreate, TaskResponse, TaskUpdate
 from app.utils.ownership import verify_project_ownership
+
+
+def get_all_user_tasks(db: Session, user: User) -> list[TaskResponse]:
+    tasks = (
+        db.query(Task)
+        .join(Project, Task.project_id == Project.id)
+        .filter(Project.user_id == user.id, Project.deleted_at.is_(None))
+        .order_by(Task.created_at.desc())
+        .all()
+    )
+    return [TaskResponse.model_validate(t) for t in tasks]
 
 
 def get_tasks(db: Session, project_id: UUID, user: User) -> list[TaskResponse]:

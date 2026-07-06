@@ -162,6 +162,7 @@ devboard/
 ### Tasks & Comments
 | Method | Endpoint | Description |
 |--------|----------|-------------|
+| GET | `/api/tasks` | List all tasks across the user's projects |
 | GET | `/api/projects/:id/tasks` | List project tasks |
 | POST | `/api/projects/:id/tasks` | Create task |
 | PATCH | `/api/tasks/:id` | Update task |
@@ -219,6 +220,7 @@ devboard/
 | `BACKEND_CORS_ORIGINS` | Allowed CORS origins (JSON array) | `["http://localhost:5173"]` |
 | `ADMIN_EMAIL` | Email of the admin user (enables `/api/admin` endpoints) | _(none)_ |
 | `SEED_DEMO_DATA` | Seed demo user/projects on startup (dev only — never enable in production) | `false` |
+| `RATE_LIMIT_ENABLED` | Per-IP rate limiting on auth endpoints (login 5/min, register 20/hour) | `true` |
 
 ### Frontend (`frontend/.env.example`)
 | Variable | Description | Default |

@@ -1,6 +1,9 @@
 import os
 
-import pytest
+# Tests register/login on every fixture use; disable throttling before app import.
+os.environ.setdefault("RATE_LIMIT_ENABLED", "false")
+
+import pytest  # noqa: E402
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
 from fastapi.testclient import TestClient
