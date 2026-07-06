@@ -3,8 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X } from 'lucide-react';
 import { useLayout } from '../../contexts/LayoutContext';
+import { useToast } from '../../contexts/ToastContext';
 import { AxiosError } from 'axios';
-import api from '../../services/api';
+import { createProject, type ProjectCreateInput } from '../../services/projects';
 import type { ProjectStatus } from '../../types';
 
 const STATUS_OPTIONS: { value: ProjectStatus; label: string }[] = [
@@ -16,6 +17,7 @@ const STATUS_OPTIONS: { value: ProjectStatus; label: string }[] = [
 
 export default function CreateProjectModal() {
   const { createProjectOpen, closeCreateProject } = useLayout();
+  const { showSuccess } = useToast();
   const navigate = useNavigate();
 
   const [title, setTitle] = useState('');
@@ -52,7 +54,7 @@ export default function CreateProjectModal() {
     setLoading(true);
 
     try {
-      const payload: Record<string, unknown> = {
+      const payload: ProjectCreateInput = {
         title: title.trim(),
         status,
       };
@@ -61,9 +63,10 @@ export default function CreateProjectModal() {
       if (startDate) payload.start_date = startDate;
       if (targetDate) payload.target_date = targetDate;
 
-      const res = await api.post('/projects', payload);
+      const created = await createProject(payload);
       handleClose();
-      navigate(`/projects/${res.data.id}`);
+      showSuccess('Project created');
+      navigate(`/projects/${created.id}`);
     } catch (err) {
       const message = err instanceof AxiosError ? err.response?.data?.detail : null;
       setError(message || 'Failed to create project');

@@ -29,15 +29,13 @@ export default function Topbar({ title, subtitle }: Props) {
       </div>
 
       <div className="flex items-center gap-3">
-        {!isDemo && (
-          <button
-            onClick={openCreateProject}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-accent hover:bg-accent-hover text-white text-sm font-medium transition-all duration-200 hover:shadow-[0_0_20px_rgba(56,189,248,0.3)]"
-          >
-            <Plus size={16} />
-            <span className="hidden sm:inline">New Project</span>
-          </button>
-        )}
+        <button
+          onClick={openCreateProject}
+          className="flex items-center gap-2 px-4 py-2 rounded-xl bg-accent hover:bg-accent-hover text-white text-sm font-medium transition-all duration-200 hover:shadow-[0_0_20px_rgba(56,189,248,0.3)]"
+        >
+          <Plus size={16} />
+          <span className="hidden sm:inline">New Project</span>
+        </button>
 
         <ThemeToggle />
 

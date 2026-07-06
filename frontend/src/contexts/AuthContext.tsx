@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
 import api from '../services/api';
+import { resetDemoStore } from '../services/demo';
 import type { User } from '../types';
 
 interface AuthState {
@@ -48,6 +49,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = () => {
     localStorage.removeItem('devboard_token');
     localStorage.removeItem('devboard_demo');
+    resetDemoStore();
     setToken(null);
     setUser(null);
     setIsDemo(false);
@@ -55,6 +57,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const enterDemo = () => {
     localStorage.setItem('devboard_demo', 'true');
+    resetDemoStore();
     setIsDemo(true);
   };
 

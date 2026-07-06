@@ -1,10 +1,9 @@
 import { useEffect, useState } from 'react';
-import { FolderPlus } from 'lucide-react';
+import { FolderPlus, Plus } from 'lucide-react';
 import Topbar from '../components/layout/Topbar';
 import ProjectCard from '../components/projects/ProjectCard';
-import { useAuth } from '../contexts/AuthContext';
-import api from '../services/api';
-import { normalizeProject } from '../utils/format';
+import { useLayout } from '../contexts/LayoutContext';
+import { listProjects } from '../services/projects';
 import type { Project, ProjectStatus } from '../types';
 
 const STATUS_FILTERS: { label: string; value: ProjectStatus | 'all' }[] = [
@@ -17,22 +16,18 @@ const STATUS_FILTERS: { label: string; value: ProjectStatus | 'all' }[] = [
 ];
 
 export default function ProjectsPage() {
-  const { isDemo } = useAuth();
+  const { openCreateProject } = useLayout();
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [filter, setFilter] = useState<ProjectStatus | 'all'>('all');
 
   useEffect(() => {
-    const endpoint = isDemo ? '/demo/projects' : '/projects';
-    api.get(endpoint)
-      .then((res) => {
-        const raw = res.data as Record<string, unknown>[];
-        setProjects(raw.map((p) => normalizeProject(p)));
-      })
+    listProjects()
+      .then(setProjects)
       .catch(() => setError('Failed to load projects'))
       .finally(() => setLoading(false));
-  }, [isDemo]);
+  }, []);
 
   const filtered = filter === 'all' ? projects : projects.filter((p) => p.status === filter);
 
@@ -40,7 +35,7 @@ export default function ProjectsPage() {
     <>
       <Topbar
         title="Projects"
-        subtitle={`Manage, deploy, and monitor your development infrastructure across ${projects.length} active environments.`}
+        subtitle="Everything you're building, from idea to deployed."
       />
 
       <div className="flex-1 p-4 md:p-8 space-y-6 overflow-y-auto">
@@ -79,6 +74,12 @@ export default function ProjectsPage() {
             <p className="text-sm text-app-text-muted mb-4 text-center max-w-sm">
               Start by creating your first project and tracking your progress from idea to deployment.
             </p>
+            <button
+              onClick={openCreateProject}
+              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-accent hover:bg-accent-hover text-white text-sm font-medium transition-colors"
+            >
+              <Plus size={16} /> Create your first project
+            </button>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">

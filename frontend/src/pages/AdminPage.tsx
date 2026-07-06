@@ -1,35 +1,12 @@
 import { useEffect, useState } from 'react';
 import { Shield, Users, FolderKanban, CheckSquare, Trash2 } from 'lucide-react';
 import Topbar from '../components/layout/Topbar';
-import api from '../services/api';
-
-interface AdminStats {
-  total_users: number;
-  total_projects: number;
-  total_tasks: number;
-  completed_tasks: number;
-}
-
-interface AdminUser {
-  id: string;
-  name: string;
-  email: string;
-  created_at: string | null;
-  project_count: number;
-}
-
-interface AdminProject {
-  id: string;
-  title: string;
-  status: string;
-  owner_name: string;
-  owner_email: string;
-  task_count: number;
-  created_at: string | null;
-  updated_at: string | null;
-}
+import { useToast } from '../contexts/ToastContext';
+import * as adminService from '../services/admin';
+import type { AdminProject, AdminStats, AdminUser } from '../services/admin';
 
 export default function AdminPage() {
+  const { showSuccess } = useToast();
   const [stats, setStats] = useState<AdminStats | null>(null);
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [projects, setProjects] = useState<AdminProject[]>([]);
@@ -39,14 +16,14 @@ export default function AdminPage() {
 
   const fetchAll = async () => {
     try {
-      const [statsRes, usersRes, projectsRes] = await Promise.all([
-        api.get('/admin/stats'),
-        api.get('/admin/users'),
-        api.get('/admin/projects'),
+      const [stats, users, projects] = await Promise.all([
+        adminService.getStats(),
+        adminService.listUsers(),
+        adminService.listAllProjects(),
       ]);
-      setStats(statsRes.data);
-      setUsers(usersRes.data);
-      setProjects(projectsRes.data);
+      setStats(stats);
+      setUsers(users);
+      setProjects(projects);
     } catch {
       setError('Access denied — admin only.');
     } finally {
@@ -59,11 +36,13 @@ export default function AdminPage() {
 
   const handleDelete = async () => {
     if (!deleteConfirm) return;
-    const endpoint = deleteConfirm.type === 'user'
-      ? `/admin/users/${deleteConfirm.id}`
-      : `/admin/projects/${deleteConfirm.id}`;
     try {
-      await api.delete(endpoint);
+      if (deleteConfirm.type === 'user') {
+        await adminService.deleteUser(deleteConfirm.id);
+      } else {
+        await adminService.deleteProject(deleteConfirm.id);
+      }
+      showSuccess(`Deleted ${deleteConfirm.type} "${deleteConfirm.name}"`);
       setDeleteConfirm(null);
       fetchAll();
     } catch {

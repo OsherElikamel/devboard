@@ -1,8 +1,8 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { Code2, Mail, Lock } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
-import api from '../services/api';
+import * as authService from '../services/auth';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -11,15 +11,19 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const { login, enterDemo } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const sessionExpired = searchParams.get('expired') === '1';
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setLoading(true);
     try {
-      const res = await api.post('/auth/login', { email, password });
-      await login(res.data.access_token);
-      navigate('/dashboard');
+      const token = await authService.login(email, password);
+      await login(token);
+      const returnTo = sessionStorage.getItem('devboard_return_to');
+      sessionStorage.removeItem('devboard_return_to');
+      navigate(returnTo || '/dashboard');
     } catch {
       setError('Invalid email or password');
     } finally {
@@ -44,19 +48,24 @@ export default function LoginPage() {
             <Code2 size={28} className="text-white" />
           </div>
           <h1 className="text-2xl font-bold text-app-text">DevBoard</h1>
-          <p className="text-sm text-app-text-muted mt-1 font-[family-name:var(--font-tech)] tracking-wide uppercase">Secure Developer Access</p>
+          <p className="text-sm text-app-text-muted mt-1 font-[family-name:var(--font-tech)] tracking-wide uppercase">Personal project tracker</p>
         </div>
 
         <div className="rounded-2xl p-8 border border-app-border bg-app-surface/80 backdrop-blur-xl shadow-[0_16px_40px_rgba(0,0,0,0.25)]">
           <h2 className="text-xl font-semibold text-app-text mb-1">Welcome back to DevBoard</h2>
-          <p className="text-sm text-app-text-muted mb-6">Enter your credentials to access your dashboard</p>
+          <p className="text-sm text-app-text-muted mb-6">Log in to pick up where you left off</p>
 
+          {sessionExpired && !error && (
+            <div className="mb-4 p-3 rounded-xl bg-warning/10 border border-warning/20 text-warning text-sm">
+              Your session expired — please log in again.
+            </div>
+          )}
           {error && <div className="mb-4 p-3 rounded-xl bg-danger/10 border border-danger/20 text-danger text-sm">{error}</div>}
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label className="block text-xs font-medium text-app-text-secondary mb-1.5 font-[family-name:var(--font-tech)] tracking-wide uppercase">
-                Work Email
+                Email
               </label>
               <div className="relative">
                 <Mail size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-app-text-muted" />
@@ -64,7 +73,7 @@ export default function LoginPage() {
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="name@company.com"
+                  placeholder="you@example.com"
                   required
                   className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-app-input border border-app-border text-app-text placeholder:text-app-text-muted text-sm focus:outline-none focus:border-accent transition-colors"
                 />

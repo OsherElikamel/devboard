@@ -64,7 +64,7 @@ export default function SettingsPage() {
               onClick={logout}
               className="px-4 py-2 rounded-xl border border-danger/30 text-danger text-sm font-medium hover:bg-danger/10 transition-colors"
             >
-              Logout Session
+              Log out
             </button>
           </div>
         </div>

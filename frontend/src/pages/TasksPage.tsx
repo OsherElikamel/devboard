@@ -6,22 +6,18 @@ import Topbar from '../components/layout/Topbar';
 import Badge from '../components/ui/Badge';
 import PriorityDropdown from '../components/tasks/PriorityDropdown';
 import TaskDetailModal from '../components/tasks/TaskDetailModal';
-import { useAuth } from '../contexts/AuthContext';
-import api from '../services/api';
-import { dueLabel, normalizeProject } from '../utils/format';
-import type { Project, Task, TaskPriority } from '../types';
+import { useToast } from '../contexts/ToastContext';
+import * as tasksService from '../services/tasks';
+import { dueLabel } from '../utils/format';
+import type { Task, TaskPriority } from '../types';
+import type { ProjectTaskGroup } from '../services/tasks';
 
 type StatusFilter = 'all' | 'todo' | 'done';
 
-interface ProjectTasks {
-  project: Project;
-  tasks: Task[];
-}
-
 export default function TasksPage() {
-  const { isDemo } = useAuth();
   const navigate = useNavigate();
-  const [groups, setGroups] = useState<ProjectTasks[]>([]);
+  const { showError } = useToast();
+  const [groups, setGroups] = useState<ProjectTaskGroup[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [filter, setFilter] = useState<StatusFilter>('all');
@@ -30,91 +26,49 @@ export default function TasksPage() {
   const [selectedProjectTitle, setSelectedProjectTitle] = useState('');
 
   useEffect(() => {
-    const base = isDemo ? '/demo' : '';
-
-    api.get(`${base}/projects`)
-      .then(async (res) => {
-        const projects: Project[] = (res.data as Record<string, unknown>[]).map(normalizeProject);
-
-        const taskResults = await Promise.all(
-          projects.map(p => api.get(`${base}/projects/${p.id}/tasks`).then(r => r.data as Task[]))
-        );
-
-        setGroups(
-          projects
-            .map((project, i) => ({ project, tasks: taskResults[i] }))
-            .filter(g => g.tasks.length > 0)
-        );
-      })
+    tasksService.listTaskGroups()
+      .then(setGroups)
       .catch(() => setError('Failed to load tasks'))
       .finally(() => setLoading(false));
-  }, [isDemo]);
+  }, []);
 
   const toggleCollapse = (projectId: string) => {
     setCollapsed(prev => ({ ...prev, [projectId]: !prev[projectId] }));
   };
 
-  const toggleTask = async (task: Task, groupIdx: number) => {
-    if (isDemo) {
-      setGroups(prev => prev.map((g, i) =>
-        i === groupIdx
-          ? { ...g, tasks: g.tasks.map(t => t.id === task.id ? { ...t, is_done: !t.is_done } : t) }
-          : g
-      ));
-      return;
-    }
-    try {
-      const res = await api.patch(`/tasks/${task.id}`, { is_done: !task.is_done });
-      setGroups(prev => prev.map((g, i) =>
-        i === groupIdx
-          ? { ...g, tasks: g.tasks.map(t => t.id === task.id ? res.data : t) }
-          : g
-      ));
-    } catch { setError('Failed to update task'); }
-  };
-
-  const changePriority = async (task: Task, groupIdx: number, priority: TaskPriority) => {
-    if (priority === task.priority) return;
-    if (isDemo) {
-      setGroups(prev => prev.map((g, i) =>
-        i === groupIdx
-          ? { ...g, tasks: g.tasks.map(t => t.id === task.id ? { ...t, priority } : t) }
-          : g
-      ));
-      return;
-    }
-    try {
-      const res = await api.patch(`/tasks/${task.id}`, { priority });
-      setGroups(prev => prev.map((g, i) =>
-        i === groupIdx
-          ? { ...g, tasks: g.tasks.map(t => t.id === task.id ? res.data : t) }
-          : g
-      ));
-    } catch { setError('Failed to update priority'); }
-  };
-
-  const handleTaskUpdate = (updated: Task) => {
+  const replaceTask = (updated: Task) => {
     setGroups(prev => prev.map(g => ({
       ...g,
       tasks: g.tasks.map(t => t.id === updated.id ? updated : t),
     })));
+  };
+
+  const toggleTask = async (task: Task) => {
+    try {
+      replaceTask(await tasksService.updateTask(task.id, { is_done: !task.is_done }));
+    } catch { showError('Failed to update task'); }
+  };
+
+  const changePriority = async (task: Task, priority: TaskPriority) => {
+    if (priority === task.priority) return;
+    try {
+      replaceTask(await tasksService.updateTask(task.id, { priority }));
+    } catch { showError('Failed to update priority'); }
+  };
+
+  const handleTaskUpdate = (updated: Task) => {
+    replaceTask(updated);
     setSelectedTask(updated);
   };
 
-  const handleTaskDelete = (taskId: string) => {
-    if (isDemo) {
+  const handleTaskDelete = async (taskId: string) => {
+    try {
+      await tasksService.deleteTask(taskId);
       setGroups(prev => prev.map(g => ({
         ...g,
         tasks: g.tasks.filter(t => t.id !== taskId),
       })).filter(g => g.tasks.length > 0));
-      return;
-    }
-    api.delete(`/tasks/${taskId}`).then(() => {
-      setGroups(prev => prev.map(g => ({
-        ...g,
-        tasks: g.tasks.filter(t => t.id !== taskId),
-      })).filter(g => g.tasks.length > 0));
-    });
+    } catch { showError('Failed to delete task'); }
   };
 
   const filterTasks = (tasks: Task[]) => {
@@ -184,7 +138,7 @@ export default function TasksPage() {
               <span className="w-28 text-right">Due Date</span>
             </div>
 
-            {groups.map((group, groupIdx) => {
+            {groups.map(group => {
               const filtered = filterTasks(group.tasks);
               if (filtered.length === 0 && filter !== 'all') return null;
               const isCollapsed = collapsed[group.project.id];
@@ -201,25 +155,29 @@ export default function TasksPage() {
 
               return (
                 <div key={group.project.id}>
-                  <button
-                    onClick={() => toggleCollapse(group.project.id)}
-                    className="w-full flex items-center gap-3 px-6 py-3 bg-app-elevated hover:bg-app-hover border-b border-app-border transition-colors"
-                  >
-                    <div className={`w-2 h-2 rounded-full ${statusColor}`} />
-                    {isCollapsed
-                      ? <ChevronRight size={16} className="text-app-text-muted" />
-                      : <ChevronDown size={16} className="text-app-text-muted" />}
-                    <span
-                      className="text-sm font-semibold text-app-text cursor-pointer hover:text-accent transition-colors"
-                      onClick={(e) => { e.stopPropagation(); navigate(`/projects/${group.project.id}`); }}
+                  <div className="w-full flex items-center gap-3 px-6 py-3 bg-app-elevated border-b border-app-border">
+                    <button
+                      onClick={() => toggleCollapse(group.project.id)}
+                      aria-expanded={!isCollapsed}
+                      aria-label={`${isCollapsed ? 'Expand' : 'Collapse'} tasks for ${group.project.title}`}
+                      className="flex items-center gap-3 hover:bg-app-hover rounded-lg px-1 -mx-1 py-1 transition-colors"
+                    >
+                      <div className={`w-2 h-2 rounded-full ${statusColor}`} />
+                      {isCollapsed
+                        ? <ChevronRight size={16} className="text-app-text-muted" />
+                        : <ChevronDown size={16} className="text-app-text-muted" />}
+                    </button>
+                    <button
+                      onClick={() => navigate(`/projects/${group.project.id}`)}
+                      className="text-sm font-semibold text-app-text hover:text-accent transition-colors"
                     >
                       {group.project.title}
-                    </span>
+                    </button>
                     <span className="text-xs text-app-text-muted font-[family-name:var(--font-tech)]">
                       {todoCount} to do · {doneCount} done
                     </span>
                     <Badge status={group.project.status} className="ml-auto" />
-                  </button>
+                  </div>
 
                   <AnimatePresence initial={false}>
                     {!isCollapsed && (
@@ -238,7 +196,8 @@ export default function TasksPage() {
                               className="flex flex-wrap md:flex-nowrap items-center px-6 py-2.5 border-b border-app-border last:border-b-0 hover:bg-app-hover transition-colors group"
                             >
                               <button
-                                onClick={() => toggleTask(task, groupIdx)}
+                                onClick={() => toggleTask(task)}
+                                aria-label={task.is_done ? `Mark "${task.title}" as not done` : `Mark "${task.title}" as done`}
                                 className={`w-[18px] h-[18px] rounded border-2 flex items-center justify-center shrink-0 transition-colors ${
                                   task.is_done
                                     ? 'bg-success border-success'
@@ -247,16 +206,16 @@ export default function TasksPage() {
                               >
                                 {task.is_done && <span className="text-white text-[10px] leading-none">✓</span>}
                               </button>
-                              <span
+                              <button
                                 onClick={() => { setSelectedTask(task); setSelectedProjectTitle(group.project.title); }}
-                                className={`flex-1 text-sm ml-3 truncate cursor-pointer hover:text-accent transition-colors ${
+                                className={`flex-1 min-w-0 text-left text-sm ml-3 truncate cursor-pointer hover:text-accent transition-colors ${
                                   task.is_done ? 'text-app-text-muted line-through' : 'text-app-text'
                                 }`}
                               >
                                 {task.title}
-                              </span>
+                              </button>
                               <span className="hidden md:flex w-24 justify-center">
-                                <PriorityDropdown priority={task.priority} onChange={p => changePriority(task, groupIdx, p)} />
+                                <PriorityDropdown priority={task.priority} onChange={p => changePriority(task, p)} />
                               </span>
                               <span className="hidden md:block w-28 text-right">
                                 {due && (
@@ -267,7 +226,7 @@ export default function TasksPage() {
                               </span>
                               {(task.priority !== 'medium' || due) && (
                                 <div className="flex md:hidden items-center gap-3 w-full ml-[30px] mt-1">
-                                  <PriorityDropdown priority={task.priority} onChange={p => changePriority(task, groupIdx, p)} />
+                                  <PriorityDropdown priority={task.priority} onChange={p => changePriority(task, p)} />
                                   {due && (
                                     <span className={`text-xs font-[family-name:var(--font-tech)] inline-flex items-center gap-1 ${due.className}`}>
                                       <Clock size={12} /> {due.label}

@@ -11,12 +11,11 @@ import Badge from '../components/ui/Badge';
 import ProgressBar from '../components/ui/ProgressBar';
 import PriorityDropdown from '../components/tasks/PriorityDropdown';
 import TaskDetailModal from '../components/tasks/TaskDetailModal';
-import { useAuth } from '../contexts/AuthContext';
-import api from '../services/api';
-import { timeAgo, dueLabel, normalizeProject, parseLocalDate } from '../utils/format';
+import { useToast } from '../contexts/ToastContext';
+import * as projectsService from '../services/projects';
+import * as tasksService from '../services/tasks';
+import { timeAgo, dueLabel, parseLocalDate } from '../utils/format';
 import type { Project, Task, TaskPriority, ActivityItem, ActivityType, ProjectStatus } from '../types';
-
-let _demoCommentId = 0;
 
 const ACTIVITY_CONFIG: Record<ActivityType, { icon: typeof MessageSquare; color: string }> = {
   comment: { icon: MessageSquare, color: 'text-accent' },
@@ -37,7 +36,7 @@ const STATUS_OPTIONS: { value: ProjectStatus; label: string }[] = [
 export default function ProjectDetailsPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { isDemo } = useAuth();
+  const { showError } = useToast();
   const [project, setProject] = useState<Project | null>(null);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [activity, setActivity] = useState<ActivityItem[]>([]);
@@ -58,25 +57,22 @@ export default function ProjectDetailsPage() {
 
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [confirmingDeleteId, setConfirmingDeleteId] = useState<string | null>(null);
-  const [toast, setToast] = useState<string | null>(null);
 
   useEffect(() => {
     if (!id) return;
-    const base = isDemo ? '/demo' : '';
-
     Promise.all([
-      api.get(`${base}/projects/${id}`),
-      api.get(`${base}/projects/${id}/tasks`),
-      api.get(`${base}/projects/${id}/activity`).catch(() => ({ data: [] })),
+      projectsService.getProject(id),
+      tasksService.listProjectTasks(id),
+      projectsService.listActivity(id),
     ])
-      .then(([pRes, tRes, aRes]) => {
-        setProject(normalizeProject(pRes.data));
-        setTasks(tRes.data);
-        setActivity(aRes.data);
+      .then(([p, t, a]) => {
+        setProject(p);
+        setTasks(t);
+        setActivity(a);
       })
       .catch(() => navigate('/projects'))
       .finally(() => setLoading(false));
-  }, [id, isDemo, navigate]);
+  }, [id, navigate]);
 
   useEffect(() => {
     if (editingTitle && titleRef.current) titleRef.current.focus();
@@ -97,14 +93,15 @@ export default function ProjectDetailsPage() {
     return () => document.removeEventListener('mousedown', handleClick);
   }, []);
 
-  useEffect(() => {
-    if (!toast) return;
-    const t = setTimeout(() => setToast(null), 4000);
-    return () => clearTimeout(t);
-  }, [toast]);
-
   const todoTasks = tasks.filter(t => !t.is_done);
   const doneTasks = tasks.filter(t => t.is_done);
+
+  const refreshProject = async () => {
+    if (!id) return;
+    try {
+      setProject(await projectsService.getProject(id));
+    } catch { /* keep the current header if the refresh fails */ }
+  };
 
   const saveProjectTitle = async () => {
     setEditingTitle(false);
@@ -114,14 +111,9 @@ export default function ProjectDetailsPage() {
       setEditTitle(project.title);
       return;
     }
-    if (isDemo) {
-      setProject({ ...project, title: trimmed });
-      return;
-    }
     try {
-      const res = await api.patch(`/projects/${id}`, { title: trimmed });
-      setProject(prev => prev ? { ...prev, ...res.data, technologies: prev.technologies } : prev);
-    } catch { setToast('Failed to update title'); }
+      setProject(await projectsService.updateProject(project.id, { title: trimmed }));
+    } catch { showError('Failed to update title'); }
   };
 
   const saveProjectDesc = async () => {
@@ -129,104 +121,62 @@ export default function ProjectDetailsPage() {
     if (!project) return;
     const trimmed = editDesc.trim();
     if (trimmed === (project.description || '')) return;
-    if (isDemo) {
-      setProject({ ...project, description: trimmed || null });
-      return;
-    }
     try {
-      const res = await api.patch(`/projects/${id}`, { description: trimmed || null });
-      setProject(prev => prev ? { ...prev, ...res.data, technologies: prev.technologies } : prev);
-    } catch { setToast('Failed to update description'); }
+      setProject(await projectsService.updateProject(project.id, { description: trimmed || null }));
+    } catch { showError('Failed to update description'); }
   };
 
   const changeProjectStatus = async (s: ProjectStatus) => {
     setShowStatusMenu(false);
     if (!project || s === project.status) return;
-    if (isDemo) {
-      setProject({ ...project, status: s });
-      return;
-    }
     try {
-      const res = await api.patch(`/projects/${id}`, { status: s });
-      setProject(prev => prev ? { ...prev, ...res.data, technologies: prev.technologies } : prev);
-    } catch { setToast('Failed to update status'); }
+      setProject(await projectsService.updateProject(project.id, { status: s }));
+    } catch { showError('Failed to update status'); }
   };
 
   const toggleTask = async (task: Task) => {
-    if (isDemo) {
-      setTasks(prev => prev.map(t => t.id === task.id ? { ...t, is_done: !t.is_done } : t));
-      return;
-    }
     try {
-      const res = await api.patch(`/tasks/${task.id}`, { is_done: !task.is_done });
-      setTasks(prev => prev.map(t => t.id === task.id ? res.data : t));
-      const pRes = await api.get(`/projects/${id}`);
-      setProject(prev => prev ? { ...prev, ...pRes.data, technologies: prev.technologies } : prev);
-    } catch { setToast('Failed to update task'); }
+      const updated = await tasksService.updateTask(task.id, { is_done: !task.is_done });
+      setTasks(prev => prev.map(t => t.id === task.id ? updated : t));
+      refreshProject();
+    } catch { showError('Failed to update task'); }
   };
 
   const changePriority = async (task: Task, priority: TaskPriority) => {
     if (priority === task.priority) return;
-    if (isDemo) {
-      setTasks(prev => prev.map(t => t.id === task.id ? { ...t, priority } : t));
-      return;
-    }
     try {
-      const res = await api.patch(`/tasks/${task.id}`, { priority });
-      setTasks(prev => prev.map(t => t.id === task.id ? res.data : t));
-    } catch { setToast('Failed to update priority'); }
+      const updated = await tasksService.updateTask(task.id, { priority });
+      setTasks(prev => prev.map(t => t.id === task.id ? updated : t));
+    } catch { showError('Failed to update priority'); }
   };
 
   const addTask = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newTask.trim() || isDemo) return;
+    if (!newTask.trim() || !id) return;
     try {
-      const res = await api.post(`/projects/${id}/tasks`, { title: newTask.trim() });
-      setTasks(prev => [res.data, ...prev]);
+      const created = await tasksService.createTask(id, { title: newTask.trim() });
+      setTasks(prev => [created, ...prev]);
       setNewTask('');
-      const pRes = await api.get(`/projects/${id}`);
-      setProject(prev => prev ? { ...prev, ...pRes.data, technologies: prev.technologies } : prev);
-    } catch { setToast('Failed to add task'); }
+      refreshProject();
+    } catch { showError('Failed to add task'); }
   };
 
   const submitComment = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newComment.trim()) return;
-
-    if (isDemo) {
-      const item: ActivityItem = {
-        id: `demo-comment-${++_demoCommentId}`,
-        project_id: id!,
-        type: 'comment',
-        user_name: 'Guest',
-        user_avatar_initial: 'G',
-        content: newComment.trim(),
-        created_at: new Date().toISOString(),
-      };
-      setActivity(prev => [item, ...prev]);
-      setNewComment('');
-      return;
-    }
-
+    if (!newComment.trim() || !id) return;
     try {
-      await api.post(`/projects/${id}/comments`, { content: newComment.trim() });
+      await projectsService.addProjectComment(id, newComment.trim());
       setNewComment('');
-      const aRes = await api.get(`/projects/${id}/activity`).catch(() => ({ data: [] }));
-      setActivity(aRes.data);
-    } catch { setToast('Failed to post comment'); }
+      setActivity(await projectsService.listActivity(id));
+    } catch { showError('Failed to post comment'); }
   };
 
   const deleteTask = async (taskId: string) => {
-    if (isDemo) {
-      setTasks(prev => prev.filter(t => t.id !== taskId));
-      return;
-    }
     try {
-      await api.delete(`/tasks/${taskId}`);
+      await tasksService.deleteTask(taskId);
       setTasks(prev => prev.filter(t => t.id !== taskId));
-      const pRes = await api.get(`/projects/${id}`);
-      setProject(prev => prev ? { ...prev, ...pRes.data, technologies: prev.technologies } : prev);
-    } catch { setToast('Failed to delete task'); }
+      refreshProject();
+    } catch { showError('Failed to delete task'); }
   };
 
   const handleTaskUpdate = (updated: Task) => {
@@ -250,6 +200,55 @@ export default function ProjectDetailsPage() {
   }
 
   if (!project) return null;
+
+  const renderTaskRow = (task: Task, done: boolean) => {
+    const due = done ? null : dueLabel(task.due_date);
+    return (
+      <div key={task.id} className="flex items-center gap-3 px-6 py-2.5 hover:bg-app-hover transition-colors group">
+        <button
+          onClick={() => toggleTask(task)}
+          aria-label={done ? `Mark "${task.title}" as not done` : `Mark "${task.title}" as done`}
+          className={`w-[18px] h-[18px] rounded border-2 flex items-center justify-center shrink-0 transition-colors ${
+            done ? 'bg-success border-success' : 'border-app-text-muted hover:border-accent'
+          }`}
+        >
+          {done && <span className="text-white text-[10px] leading-none">✓</span>}
+        </button>
+        <button
+          onClick={() => setSelectedTask(task)}
+          className={`flex-1 min-w-0 text-left text-sm truncate cursor-pointer hover:text-accent transition-colors ${
+            done ? 'text-app-text-muted line-through' : 'text-app-text'
+          }`}
+        >
+          {task.title}
+        </button>
+        <PriorityDropdown priority={task.priority} onChange={p => changePriority(task, p)} />
+        {due && (
+          <span className={`text-xs font-[family-name:var(--font-tech)] flex items-center gap-1 shrink-0 ${due.className}`}>
+            <Clock size={12} /> {due.label}
+          </span>
+        )}
+        {confirmingDeleteId === task.id ? (
+          <div className="flex items-center gap-1 shrink-0">
+            <button onClick={() => { deleteTask(task.id); setConfirmingDeleteId(null); }} className="px-2 py-0.5 rounded-lg bg-danger/15 text-danger text-xs font-medium hover:bg-danger/25 transition-colors">
+              Delete
+            </button>
+            <button onClick={() => setConfirmingDeleteId(null)} className="px-2 py-0.5 rounded-lg text-app-text-muted text-xs hover:bg-app-hover transition-colors">
+              Cancel
+            </button>
+          </div>
+        ) : (
+          <button
+            onClick={() => setConfirmingDeleteId(task.id)}
+            aria-label={`Delete task "${task.title}"`}
+            className="opacity-0 group-hover:opacity-100 focus-visible:opacity-100 p-1 text-app-text-muted hover:text-danger transition-all"
+          >
+            <Trash2 size={14} />
+          </button>
+        )}
+      </div>
+    );
+  };
 
   return (
     <>
@@ -277,16 +276,21 @@ export default function ProjectDetailsPage() {
                   />
                 ) : (
                   <h2
-                    onClick={() => { if (!isDemo) { setEditTitle(project.title); setEditingTitle(true); } }}
-                    className={`text-2xl font-bold text-app-text group flex items-center gap-2 ${!isDemo ? 'cursor-text hover:bg-app-hover/50 rounded-lg px-1 -mx-1' : ''} transition-colors`}
+                    onClick={() => { setEditTitle(project.title); setEditingTitle(true); }}
+                    className="text-2xl font-bold text-app-text group flex items-center gap-2 cursor-text hover:bg-app-hover/50 rounded-lg px-1 -mx-1 transition-colors"
                   >
                     {project.title}
-                    {!isDemo && <Pencil size={14} className="text-app-text-muted opacity-0 group-hover:opacity-100 transition-opacity" />}
+                    <Pencil size={14} className="text-app-text-muted opacity-0 group-hover:opacity-100 transition-opacity" />
                   </h2>
                 )}
                 <div className="relative shrink-0" ref={statusRef}>
-                  <button onClick={() => { if (!isDemo) setShowStatusMenu(v => !v); }}>
-                    <Badge status={project.status} className={!isDemo ? 'cursor-pointer hover:brightness-110' : ''} />
+                  <button
+                    onClick={() => setShowStatusMenu(v => !v)}
+                    aria-label={`Change project status (currently ${project.status.replace('_', ' ')})`}
+                    aria-expanded={showStatusMenu}
+                    aria-haspopup="menu"
+                  >
+                    <Badge status={project.status} className="cursor-pointer hover:brightness-110" />
                   </button>
                   {showStatusMenu && (
                     <div className="absolute top-full left-0 mt-1 py-1 rounded-xl border border-app-border bg-app-surface shadow-xl z-10 min-w-[140px]">
@@ -318,15 +322,15 @@ export default function ProjectDetailsPage() {
                 />
               ) : (
                 <div
-                  onClick={() => { if (!isDemo) { setEditDesc(project.description || ''); setEditingDesc(true); } }}
-                  className={`max-w-3xl group ${!isDemo ? 'cursor-text hover:bg-app-hover/50 rounded-lg px-1 -mx-1 py-1' : ''} transition-colors`}
+                  onClick={() => { setEditDesc(project.description || ''); setEditingDesc(true); }}
+                  className="max-w-3xl group cursor-text hover:bg-app-hover/50 rounded-lg px-1 -mx-1 py-1 transition-colors"
                 >
                   {project.description ? (
                     <p className="text-app-text-secondary leading-relaxed">{project.description}</p>
                   ) : (
                     <p className="text-app-text-muted italic text-sm">Click to add a description...</p>
                   )}
-                  {!isDemo && <Pencil size={12} className="text-app-text-muted opacity-0 group-hover:opacity-100 transition-opacity mt-1" />}
+                  <Pencil size={12} className="text-app-text-muted opacity-0 group-hover:opacity-100 transition-opacity mt-1" />
                 </div>
               )}
             </div>
@@ -405,25 +409,24 @@ export default function ProjectDetailsPage() {
             </div>
 
             <div className="divide-y divide-app-border">
-              {!isDemo && (
-                <form onSubmit={addTask} className="flex gap-2 px-6 py-3">
-                  <input
-                    type="text"
-                    value={newTask}
-                    onChange={e => setNewTask(e.target.value)}
-                    placeholder="Add a new task..."
-                    className="flex-1 px-4 py-2 rounded-xl bg-app-input border border-app-border text-app-text placeholder:text-app-text-muted text-sm focus:outline-none focus:border-accent transition-colors"
-                  />
-                  <button type="submit" className="px-4 py-2 rounded-xl bg-accent hover:bg-accent-hover text-white text-sm font-medium transition-colors">
-                    <Plus size={16} />
-                  </button>
-                </form>
-              )}
+              <form onSubmit={addTask} className="flex gap-2 px-6 py-3">
+                <input
+                  type="text"
+                  value={newTask}
+                  onChange={e => setNewTask(e.target.value)}
+                  placeholder="Add a new task..."
+                  className="flex-1 px-4 py-2 rounded-xl bg-app-input border border-app-border text-app-text placeholder:text-app-text-muted text-sm focus:outline-none focus:border-accent transition-colors"
+                />
+                <button type="submit" aria-label="Add task" className="px-4 py-2 rounded-xl bg-accent hover:bg-accent-hover text-white text-sm font-medium transition-colors">
+                  <Plus size={16} />
+                </button>
+              </form>
 
               {/* To Do Group */}
               <div>
                 <button
                   onClick={() => setShowTodo(v => !v)}
+                  aria-expanded={showTodo}
                   className="w-full flex items-center gap-2 px-6 py-3 hover:bg-app-hover transition-colors"
                 >
                   <div className="w-1 h-5 rounded-full bg-accent" />
@@ -443,45 +446,7 @@ export default function ProjectDetailsPage() {
                       {todoTasks.length === 0 ? (
                         <p className="px-6 py-4 text-sm text-app-text-muted text-center">All tasks completed!</p>
                       ) : (
-                        todoTasks.map(task => {
-                          const due = dueLabel(task.due_date);
-                          return (
-                            <div key={task.id} className="flex items-center gap-3 px-6 py-2.5 hover:bg-app-hover transition-colors group">
-                              <button
-                                onClick={() => toggleTask(task)}
-                                className="w-[18px] h-[18px] rounded border-2 border-app-text-muted hover:border-accent transition-colors shrink-0"
-                              />
-                              <span
-                                onClick={() => setSelectedTask(task)}
-                                className="flex-1 text-sm text-app-text truncate cursor-pointer hover:text-accent transition-colors"
-                              >
-                                {task.title}
-                              </span>
-                              <PriorityDropdown priority={task.priority} onChange={p => changePriority(task, p)} />
-                              {due && (
-                                <span className={`text-xs font-[family-name:var(--font-tech)] flex items-center gap-1 shrink-0 ${due.className}`}>
-                                  <Clock size={12} /> {due.label}
-                                </span>
-                              )}
-                              {!isDemo && (
-                                confirmingDeleteId === task.id ? (
-                                  <div className="flex items-center gap-1 shrink-0">
-                                    <button onClick={() => { deleteTask(task.id); setConfirmingDeleteId(null); }} className="px-2 py-0.5 rounded-lg bg-danger/15 text-danger text-xs font-medium hover:bg-danger/25 transition-colors">
-                                      Delete
-                                    </button>
-                                    <button onClick={() => setConfirmingDeleteId(null)} className="px-2 py-0.5 rounded-lg text-app-text-muted text-xs hover:bg-app-hover transition-colors">
-                                      Cancel
-                                    </button>
-                                  </div>
-                                ) : (
-                                  <button onClick={() => setConfirmingDeleteId(task.id)} className="opacity-0 group-hover:opacity-100 p-1 text-app-text-muted hover:text-danger transition-all">
-                                    <Trash2 size={14} />
-                                  </button>
-                                )
-                              )}
-                            </div>
-                          );
-                        })
+                        todoTasks.map(task => renderTaskRow(task, false))
                       )}
                     </motion.div>
                   )}
@@ -492,6 +457,7 @@ export default function ProjectDetailsPage() {
               <div>
                 <button
                   onClick={() => setShowDone(v => !v)}
+                  aria-expanded={showDone}
                   className="w-full flex items-center gap-2 px-6 py-3 hover:bg-app-hover transition-colors"
                 >
                   <div className="w-1 h-5 rounded-full bg-success" />
@@ -508,39 +474,7 @@ export default function ProjectDetailsPage() {
                       transition={{ duration: 0.2 }}
                       className="overflow-hidden"
                     >
-                      {doneTasks.map(task => (
-                        <div key={task.id} className="flex items-center gap-3 px-6 py-2.5 hover:bg-app-hover transition-colors group">
-                          <button
-                            onClick={() => toggleTask(task)}
-                            className="w-[18px] h-[18px] rounded border-2 bg-success border-success flex items-center justify-center shrink-0"
-                          >
-                            <span className="text-white text-[10px] leading-none">✓</span>
-                          </button>
-                          <span
-                            onClick={() => setSelectedTask(task)}
-                            className="flex-1 text-sm text-app-text-muted line-through truncate cursor-pointer hover:text-accent transition-colors"
-                          >
-                            {task.title}
-                          </span>
-                          <PriorityDropdown priority={task.priority} onChange={p => changePriority(task, p)} />
-                          {!isDemo && (
-                            confirmingDeleteId === task.id ? (
-                              <div className="flex items-center gap-1 shrink-0">
-                                <button onClick={() => { deleteTask(task.id); setConfirmingDeleteId(null); }} className="px-2 py-0.5 rounded-lg bg-danger/15 text-danger text-xs font-medium hover:bg-danger/25 transition-colors">
-                                  Delete
-                                </button>
-                                <button onClick={() => setConfirmingDeleteId(null)} className="px-2 py-0.5 rounded-lg text-app-text-muted text-xs hover:bg-app-hover transition-colors">
-                                  Cancel
-                                </button>
-                              </div>
-                            ) : (
-                              <button onClick={() => setConfirmingDeleteId(task.id)} className="opacity-0 group-hover:opacity-100 p-1 text-app-text-muted hover:text-danger transition-all">
-                                <Trash2 size={14} />
-                              </button>
-                            )
-                          )}
-                        </div>
-                      ))}
+                      {doneTasks.map(task => renderTaskRow(task, true))}
                     </motion.div>
                   )}
                 </AnimatePresence>
@@ -609,19 +543,6 @@ export default function ProjectDetailsPage() {
         onUpdate={handleTaskUpdate}
         onDelete={deleteTask}
       />
-
-      <AnimatePresence>
-        {toast && (
-          <motion.div
-            initial={{ opacity: 0, y: 40 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 40 }}
-            className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[70] px-4 py-2.5 rounded-xl bg-danger/90 text-white text-sm font-medium shadow-lg"
-          >
-            {toast}
-          </motion.div>
-        )}
-      </AnimatePresence>
     </>
   );
 }

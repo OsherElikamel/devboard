@@ -18,10 +18,12 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (res) => res,
   (err) => {
-    if (err.response?.status === 401) {
+    const isLoginAttempt = err.config?.url?.includes('/auth/login');
+    if (err.response?.status === 401 && !isLoginAttempt) {
       localStorage.removeItem('devboard_token');
       if (window.location.pathname !== '/login') {
-        window.location.href = '/login';
+        sessionStorage.setItem('devboard_return_to', window.location.pathname);
+        window.location.href = '/login?expired=1';
       }
     }
     return Promise.reject(err);

@@ -4,8 +4,8 @@ import {
   X, CheckCircle2, Circle, Clock, Calendar,
   Flag, MessageSquare, Send, Trash2, Pencil,
 } from 'lucide-react';
-import { useAuth } from '../../contexts/AuthContext';
-import api from '../../services/api';
+import { useToast } from '../../contexts/ToastContext';
+import * as tasksService from '../../services/tasks';
 import { parseLocalDate, timeAgo } from '../../utils/format';
 import { PRIORITIES } from './priority-constants';
 import type { Task, TaskPriority, Comment } from '../../types';
@@ -18,10 +18,8 @@ interface Props {
   onDelete: (taskId: string) => void;
 }
 
-let _demoCommentId = 100;
-
 export default function TaskDetailModal({ task, projectTitle, onClose, onUpdate, onDelete }: Props) {
-  const { isDemo } = useAuth();
+  const { showError } = useToast();
   const [editingTitle, setEditingTitle] = useState(false);
   const [title, setTitle] = useState('');
   const [editingDesc, setEditingDesc] = useState(false);
@@ -31,7 +29,6 @@ export default function TaskDetailModal({ task, projectTitle, onClose, onUpdate,
   const [newComment, setNewComment] = useState('');
   const [loadingComments, setLoadingComments] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
-  const [toast, setToast] = useState<string | null>(null);
   const titleRef = useRef<HTMLInputElement>(null);
   const descRef = useRef<HTMLTextAreaElement>(null);
   const priorityRef = useRef<HTMLDivElement>(null);
@@ -39,9 +36,7 @@ export default function TaskDetailModal({ task, projectTitle, onClose, onUpdate,
   const loadComments = async (taskId: string) => {
     setLoadingComments(true);
     try {
-      const base = isDemo ? '/demo' : '';
-      const res = await api.get(`${base}/tasks/${taskId}/comments`);
-      setComments(res.data);
+      setComments(await tasksService.listTaskComments(taskId));
     } catch {
       setComments([]);
     } finally {
@@ -84,12 +79,6 @@ export default function TaskDetailModal({ task, projectTitle, onClose, onUpdate,
     return () => document.removeEventListener('mousedown', handleClick);
   }, []);
 
-  useEffect(() => {
-    if (!toast) return;
-    const t = setTimeout(() => setToast(null), 4000);
-    return () => clearTimeout(t);
-  }, [toast]);
-
   if (!task) return null;
 
   const priorityInfo = PRIORITIES.find(p => p.value === task.priority) || PRIORITIES[1];
@@ -101,89 +90,48 @@ export default function TaskDetailModal({ task, projectTitle, onClose, onUpdate,
       setTitle(task.title);
       return;
     }
-    if (isDemo) {
-      onUpdate({ ...task, title: trimmed });
-      return;
-    }
     try {
-      const res = await api.patch(`/tasks/${task.id}`, { title: trimmed });
-      onUpdate(res.data);
-    } catch { setToast('Failed to update title'); }
+      onUpdate(await tasksService.updateTask(task.id, { title: trimmed }));
+    } catch { showError('Failed to update title'); }
   };
 
   const saveDescription = async () => {
     setEditingDesc(false);
     const trimmed = description.trim();
     if (trimmed === (task.description || '')) return;
-    if (isDemo) {
-      onUpdate({ ...task, description: trimmed || null });
-      return;
-    }
     try {
-      const res = await api.patch(`/tasks/${task.id}`, { description: trimmed || null });
-      onUpdate(res.data);
-    } catch { setToast('Failed to update description'); }
+      onUpdate(await tasksService.updateTask(task.id, { description: trimmed || null }));
+    } catch { showError('Failed to update description'); }
   };
 
   const toggleDone = async () => {
-    if (isDemo) {
-      onUpdate({ ...task, is_done: !task.is_done });
-      return;
-    }
     try {
-      const res = await api.patch(`/tasks/${task.id}`, { is_done: !task.is_done });
-      onUpdate(res.data);
-    } catch { setToast('Failed to update task'); }
+      onUpdate(await tasksService.updateTask(task.id, { is_done: !task.is_done }));
+    } catch { showError('Failed to update task'); }
   };
 
   const changePriority = async (p: TaskPriority) => {
     setShowPriorityMenu(false);
     if (p === task.priority) return;
-    if (isDemo) {
-      onUpdate({ ...task, priority: p });
-      return;
-    }
     try {
-      const res = await api.patch(`/tasks/${task.id}`, { priority: p });
-      onUpdate(res.data);
-    } catch { setToast('Failed to update priority'); }
+      onUpdate(await tasksService.updateTask(task.id, { priority: p }));
+    } catch { showError('Failed to update priority'); }
   };
 
   const changeDueDate = async (dateStr: string) => {
-    if (isDemo) {
-      onUpdate({ ...task, due_date: dateStr || null });
-      return;
-    }
     try {
-      const res = await api.patch(`/tasks/${task.id}`, { due_date: dateStr || null });
-      onUpdate(res.data);
-    } catch { setToast('Failed to update due date'); }
+      onUpdate(await tasksService.updateTask(task.id, { due_date: dateStr || null }));
+    } catch { showError('Failed to update due date'); }
   };
 
   const submitComment = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newComment.trim()) return;
-
-    if (isDemo) {
-      const c: Comment = {
-        id: `demo-tc-${++_demoCommentId}`,
-        task_id: task.id,
-        user_id: 'demo',
-        user_name: 'Guest',
-        content: newComment.trim(),
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      };
-      setComments(prev => [...prev, c]);
-      setNewComment('');
-      return;
-    }
-
     try {
-      const res = await api.post(`/tasks/${task.id}/comments`, { content: newComment.trim() });
-      setComments(prev => [...prev, res.data]);
+      const created = await tasksService.addTaskComment(task.id, newComment.trim());
+      setComments(prev => [...prev, created]);
       setNewComment('');
-    } catch { setToast('Failed to post comment'); }
+    } catch { showError('Failed to post comment'); }
   };
 
   const handleDelete = () => {
@@ -231,31 +179,29 @@ export default function TaskDetailModal({ task, projectTitle, onClose, onUpdate,
                 )}
               </div>
               <div className="flex items-center gap-2">
-                {!isDemo && (
-                  confirmDelete ? (
-                    <div className="flex items-center gap-1.5">
-                      <button
-                        onClick={handleDelete}
-                        className="px-2.5 py-1 rounded-lg bg-danger/15 text-danger text-xs font-medium hover:bg-danger/25 transition-colors"
-                      >
-                        Delete
-                      </button>
-                      <button
-                        onClick={() => setConfirmDelete(false)}
-                        className="px-2.5 py-1 rounded-lg text-app-text-muted text-xs hover:bg-app-hover transition-colors"
-                      >
-                        Cancel
-                      </button>
-                    </div>
-                  ) : (
+                {confirmDelete ? (
+                  <div className="flex items-center gap-1.5">
                     <button
-                      onClick={() => setConfirmDelete(true)}
-                      className="p-1.5 rounded-lg text-app-text-muted hover:text-danger hover:bg-danger/10 transition-colors"
-                      aria-label="Delete task"
+                      onClick={handleDelete}
+                      className="px-2.5 py-1 rounded-lg bg-danger/15 text-danger text-xs font-medium hover:bg-danger/25 transition-colors"
                     >
-                      <Trash2 size={16} />
+                      Delete
                     </button>
-                  )
+                    <button
+                      onClick={() => setConfirmDelete(false)}
+                      className="px-2.5 py-1 rounded-lg text-app-text-muted text-xs hover:bg-app-hover transition-colors"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => setConfirmDelete(true)}
+                    className="p-1.5 rounded-lg text-app-text-muted hover:text-danger hover:bg-danger/10 transition-colors"
+                    aria-label="Delete task"
+                  >
+                    <Trash2 size={16} />
+                  </button>
                 )}
                 <button
                   onClick={onClose}
@@ -318,6 +264,8 @@ export default function TaskDetailModal({ task, projectTitle, onClose, onUpdate,
                       <span className="text-xs text-app-text-muted font-[family-name:var(--font-tech)] uppercase tracking-wide w-16">Priority</span>
                       <button
                         onClick={() => setShowPriorityMenu(v => !v)}
+                        aria-expanded={showPriorityMenu}
+                        aria-haspopup="menu"
                         className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium border transition-colors hover:brightness-110 ${priorityInfo.bg} ${priorityInfo.color} border-current/20`}
                       >
                         <Flag size={12} />
@@ -350,6 +298,7 @@ export default function TaskDetailModal({ task, projectTitle, onClose, onUpdate,
                           type="date"
                           value={task.due_date || ''}
                           onChange={e => changeDueDate(e.target.value)}
+                          aria-label="Due date"
                           className={`px-3 py-1 rounded-full text-xs font-medium border border-app-border bg-app-input transition-colors focus:outline-none focus:border-accent ${
                             dueInfo ? dueInfo.className : 'text-app-text-secondary'
                           }`}
@@ -445,7 +394,7 @@ export default function TaskDetailModal({ task, projectTitle, onClose, onUpdate,
                         placeholder="Write a comment..."
                         className="flex-1 px-3 py-2 rounded-xl bg-app-input border border-app-border text-app-text placeholder:text-app-text-muted text-sm focus:outline-none focus:border-accent transition-colors"
                       />
-                      <button type="submit" className="p-2 rounded-xl bg-accent hover:bg-accent-hover text-white transition-colors">
+                      <button type="submit" aria-label="Send comment" className="p-2 rounded-xl bg-accent hover:bg-accent-hover text-white transition-colors">
                         <Send size={14} />
                       </button>
                     </div>
@@ -454,17 +403,6 @@ export default function TaskDetailModal({ task, projectTitle, onClose, onUpdate,
               </div>
             </div>
           </motion.div>
-
-          {toast && (
-            <motion.div
-              initial={{ opacity: 0, y: 40 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 40 }}
-              className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[80] px-4 py-2.5 rounded-xl bg-danger/90 text-white text-sm font-medium shadow-lg"
-            >
-              {toast}
-            </motion.div>
-          )}
         </div>
       )}
     </AnimatePresence>

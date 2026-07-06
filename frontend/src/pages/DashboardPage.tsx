@@ -9,8 +9,7 @@ import ProjectCard from '../components/projects/ProjectCard';
 import Badge from '../components/ui/Badge';
 import ProgressBar from '../components/ui/ProgressBar';
 import { useAuth } from '../contexts/AuthContext';
-import api from '../services/api';
-import { normalizeProject } from '../utils/format';
+import { getDashboardSummary } from '../services/dashboard';
 import type { DashboardSummary, Project, ProjectStatus } from '../types';
 
 type StatFilter = 'total' | 'active' | 'deployed';
@@ -39,9 +38,8 @@ export default function DashboardPage() {
   const [statusFilter, setStatusFilter] = useState<string | null>(null);
 
   useEffect(() => {
-    const endpoint = isDemo ? '/demo/dashboard' : '/dashboard/summary';
-    api.get(endpoint)
-      .then((res) => setData(res.data))
+    getDashboardSummary()
+      .then(setData)
       .catch(() => setError('Failed to load dashboard data'))
       .finally(() => setLoading(false));
   }, [isDemo]);
@@ -52,9 +50,7 @@ export default function DashboardPage() {
     setExpandedStat((prev) => (prev === stat ? null : stat));
   };
 
-  const allProjects: Project[] = data
-    ? data.recent_projects.map((p) => normalizeProject(p as unknown as Record<string, unknown>))
-    : [];
+  const allProjects: Project[] = data ? data.recent_projects : [];
 
   const filteredProjects: Project[] = allProjects.filter((p) => {
     if (!expandedStat || expandedStat === 'total') return true;
@@ -98,7 +94,7 @@ export default function DashboardPage() {
 
   return (
     <>
-      <Topbar title="System Overview" subtitle={`${greeting}. Here's what's happening across your repositories today.`} />
+      <Topbar title="Dashboard" subtitle={`${greeting}. Here's what's happening across your projects.`} />
 
       <div className="flex-1 p-4 md:p-8 space-y-8 overflow-y-auto">
         {loading ? (
@@ -115,8 +111,8 @@ export default function DashboardPage() {
           <>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               <StatCard label="Total Projects" value={data.total_projects} icon={FolderKanban} subtitle={`${data.projects_by_status.in_progress || 0} in progress`} onClick={() => toggleStat('total')} active={expandedStat === 'total'} />
-              <StatCard label="Active Projects" value={data.projects_by_status.in_progress || 0} icon={Activity} subtitle="Current Sprints" onClick={() => toggleStat('active')} active={expandedStat === 'active'} />
-              <StatCard label="Deployed" value={data.projects_by_status.deployed || 0} icon={Rocket} subtitle="Live Production" onClick={() => toggleStat('deployed')} active={expandedStat === 'deployed'} />
+              <StatCard label="Active Projects" value={data.projects_by_status.in_progress || 0} icon={Activity} subtitle="In progress now" onClick={() => toggleStat('active')} active={expandedStat === 'active'} />
+              <StatCard label="Deployed" value={data.projects_by_status.deployed || 0} icon={Rocket} subtitle="Currently live" onClick={() => toggleStat('deployed')} active={expandedStat === 'deployed'} />
               <StatCard label="Avg Progress" value={`${data.average_progress}%`} icon={TrendingUp} subtitle="Across all projects" accent />
             </div>
 
@@ -152,6 +148,9 @@ export default function DashboardPage() {
                             key={project.id}
                             whileHover={{ x: 4 }}
                             onClick={() => navigate(`/projects/${project.id}`)}
+                            role="button"
+                            tabIndex={0}
+                            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); navigate(`/projects/${project.id}`); } }}
                             className="flex items-center gap-4 px-4 py-3 rounded-xl hover:bg-app-hover cursor-pointer transition-colors group"
                           >
                             <div className="flex-1 min-w-0">
@@ -196,7 +195,7 @@ export default function DashboardPage() {
                     </button>
                   )}
                 </div>
-                <p className="text-sm text-app-text-muted mb-4">Real-time health across lifecycle stages.</p>
+                <p className="text-sm text-app-text-muted mb-4">Where each project stands right now.</p>
                 <DonutChart data={data.projects_by_status} activeStatus={statusFilter} onStatusClick={toggleStatus} />
               </div>
 
@@ -275,7 +274,7 @@ export default function DashboardPage() {
                   ))}
                 </div>
               ) : (
-                <p className="text-sm text-app-text-muted mb-4">High-priority development tracks currently in focus.</p>
+                <p className="text-sm text-app-text-muted mb-4">Your most recently updated projects.</p>
               )}
               {featuredProjects.length === 0 ? (
                 <div className="rounded-2xl border border-app-border bg-app-surface py-12 text-center">
