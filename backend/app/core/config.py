@@ -8,6 +8,7 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60
     ADMIN_EMAIL: str = ""
     BACKEND_CORS_ORIGINS: list[str] = ["http://localhost:5173"]
+    SEED_DEMO_DATA: bool = False
 
     model_config = {"env_file": ".env", "extra": "ignore"}
 

@@ -1,8 +1,20 @@
 from datetime import date, datetime
 from enum import Enum
+from typing import Annotated
 from uuid import UUID
 
-from pydantic import BaseModel, Field
+from pydantic import AfterValidator, BaseModel, Field
+
+
+def _require_http_url(value: str | None) -> str | None:
+    if not value:
+        return None
+    if not value.startswith(("http://", "https://")):
+        raise ValueError("URL must start with http:// or https://")
+    return value
+
+
+HttpUrlStr = Annotated[str | None, Field(max_length=500), AfterValidator(_require_http_url)]
 
 
 class ProjectStatus(str, Enum):
@@ -24,12 +36,12 @@ class ProjectCreate(BaseModel):
     title: str = Field(min_length=2, max_length=100)
     description: str | None = Field(default=None, max_length=2000)
     status: ProjectStatus = ProjectStatus.idea
-    repo_name: str | None = None
-    github_url: str | None = None
-    live_url: str | None = None
-    frontend_url: str | None = None
-    backend_url: str | None = None
-    deployment_platform: str | None = None
+    repo_name: str | None = Field(default=None, max_length=200)
+    github_url: HttpUrlStr = None
+    live_url: HttpUrlStr = None
+    frontend_url: HttpUrlStr = None
+    backend_url: HttpUrlStr = None
+    deployment_platform: str | None = Field(default=None, max_length=50)
     deployment_status: DeploymentStatus = DeploymentStatus.not_deployed
     start_date: date | None = None
     target_date: date | None = None
@@ -39,12 +51,12 @@ class ProjectUpdate(BaseModel):
     title: str | None = Field(default=None, min_length=2, max_length=100)
     description: str | None = Field(default=None, max_length=2000)
     status: ProjectStatus | None = None
-    repo_name: str | None = None
-    github_url: str | None = None
-    live_url: str | None = None
-    frontend_url: str | None = None
-    backend_url: str | None = None
-    deployment_platform: str | None = None
+    repo_name: str | None = Field(default=None, max_length=200)
+    github_url: HttpUrlStr = None
+    live_url: HttpUrlStr = None
+    frontend_url: HttpUrlStr = None
+    backend_url: HttpUrlStr = None
+    deployment_platform: str | None = Field(default=None, max_length=50)
     deployment_status: DeploymentStatus | None = None
     start_date: date | None = None
     target_date: date | None = None

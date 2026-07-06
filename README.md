@@ -99,8 +99,8 @@ A full-stack developer dashboard for tracking projects, tasks, and progress. Bui
    - pgAdmin: [http://localhost:5050](http://localhost:5050) (admin@devboard.local / admin)
 
 ### Demo Login
-- Click **"Try as Guest"** on the login page for instant access with pre-populated data
-- Or use the seeded account: `alex@devboard.dev` / `demo1234`
+- Click **"Explore Demo Board"** on the login page for instant access with pre-populated data
+- In local development (`docker compose up`), a seeded account is also available: `alex@devboard.dev` / `demo1234` — seeding only runs when `SEED_DEMO_DATA=true`
 
 ## Project Structure
 
@@ -218,6 +218,7 @@ devboard/
 | `ACCESS_TOKEN_EXPIRE_MINUTES` | Token expiry time | `60` |
 | `BACKEND_CORS_ORIGINS` | Allowed CORS origins (JSON array) | `["http://localhost:5173"]` |
 | `ADMIN_EMAIL` | Email of the admin user (enables `/api/admin` endpoints) | _(none)_ |
+| `SEED_DEMO_DATA` | Seed demo user/projects on startup (dev only — never enable in production) | `false` |
 
 ### Frontend (`frontend/.env.example`)
 | Variable | Description | Default |

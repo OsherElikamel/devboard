@@ -2,6 +2,7 @@
 import uuid
 from datetime import date, datetime, timezone
 
+from app.core.config import settings
 from app.core.security import hash_password
 from app.db.database import SessionLocal
 from app.models.comment import Comment
@@ -14,6 +15,10 @@ from app.models.user import User
 
 
 def seed():
+    if not settings.SEED_DEMO_DATA:
+        print("SEED_DEMO_DATA is disabled, skipping seed.")
+        return
+
     db = SessionLocal()
     try:
         demo_user = db.query(User).filter(User.email == "alex@devboard.dev").first()
