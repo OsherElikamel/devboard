@@ -206,6 +206,7 @@ devboard/
 | GET | `/api/demo/projects/:id` | Demo project detail |
 | GET | `/api/demo/projects/:id/tasks` | Demo project tasks |
 | GET | `/api/demo/projects/:id/activity` | Demo project activity |
+| GET | `/api/demo/projects/:id/learning-notes` | Demo learning notes |
 | GET | `/api/demo/tasks/:id/comments` | Demo task comments |
 
 ## Environment Variables

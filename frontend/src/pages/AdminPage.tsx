@@ -4,8 +4,10 @@ import Topbar from '../components/layout/Topbar';
 import { useToast } from '../contexts/ToastContext';
 import * as adminService from '../services/admin';
 import type { AdminProject, AdminStats, AdminUser } from '../services/admin';
+import { useDocumentTitle } from '../hooks/useDocumentTitle';
 
 export default function AdminPage() {
+  useDocumentTitle('Admin · DevBoard');
   const { showSuccess } = useToast();
   const [stats, setStats] = useState<AdminStats | null>(null);
   const [users, setUsers] = useState<AdminUser[]>([]);

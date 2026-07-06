@@ -1,8 +1,9 @@
 import api from './api';
 import { normalizeProject } from '../utils/format';
-import type { ActivityItem, Comment, DashboardSummary, Project, Task } from '../types';
+import type { ActivityItem, Comment, DashboardSummary, LearningNote, Project, Task, Technology } from '../types';
 import type { ProjectCreateInput, ProjectUpdateInput } from './projects';
 import type { TaskCreateInput, TaskUpdateInput } from './tasks';
+import type { LearningNoteCreateInput, LearningNoteUpdateInput } from './learningNotes';
 
 /** In-memory demo data store.
  *
@@ -21,16 +22,37 @@ const newId = (prefix: string) => `demo-${prefix}-${++seq}`;
 const isLocalId = (id: string) => id.startsWith('demo-');
 const now = () => new Date().toISOString();
 
+const DEMO_TECH_NAMES: [string, string][] = [
+  ['React', 'frontend'], ['TypeScript', 'frontend'], ['Vite', 'frontend'],
+  ['Tailwind CSS', 'frontend'], ['CSS', 'frontend'],
+  ['Python', 'backend'], ['FastAPI', 'backend'], ['Node.js', 'backend'],
+  ['PostgreSQL', 'database'], ['MongoDB', 'database'],
+  ['Docker', 'devops'], ['JWT', 'backend'],
+];
+
+function buildTechCatalog(): Technology[] {
+  return DEMO_TECH_NAMES.map(([name, category], i) => ({
+    id: `demo-tech-${i}`,
+    name,
+    category,
+    created_at: now(),
+  }));
+}
+
 let projects: Project[] | null = null;
+let techCatalog: Technology[] | null = null;
 const tasksByProject = new Map<string, Task[]>();
 const activityByProject = new Map<string, ActivityItem[]>();
 const commentsByTask = new Map<string, Comment[]>();
+const notesByProject = new Map<string, LearningNote[]>();
 
 export function resetDemoStore(): void {
   projects = null;
+  techCatalog = null;
   tasksByProject.clear();
   activityByProject.clear();
   commentsByTask.clear();
+  notesByProject.clear();
 }
 
 async function ensureProjects(): Promise<Project[]> {
@@ -63,6 +85,18 @@ async function ensureActivity(projectId: string): Promise<ActivityItem[]> {
     }
   }
   return activityByProject.get(projectId)!;
+}
+
+async function ensureNotes(projectId: string): Promise<LearningNote[]> {
+  if (!notesByProject.has(projectId)) {
+    if (isLocalId(projectId)) {
+      notesByProject.set(projectId, []);
+    } else {
+      const res = await api.get(`/demo/projects/${projectId}/learning-notes`).catch(() => ({ data: [] }));
+      notesByProject.set(projectId, res.data as LearningNote[]);
+    }
+  }
+  return notesByProject.get(projectId)!;
 }
 
 async function ensureTaskComments(taskId: string): Promise<Comment[]> {
@@ -232,6 +266,80 @@ export const demoStore = {
     };
     comments.push(comment);
     return { ...comment };
+  },
+
+  listTechnologies(): Promise<Technology[]> {
+    techCatalog ??= buildTechCatalog();
+    return Promise.resolve([...techCatalog]);
+  },
+
+  createTechnology(name: string): Promise<Technology> {
+    techCatalog ??= buildTechCatalog();
+    const tech: Technology = { id: newId('tech'), name, category: null, created_at: now() };
+    techCatalog.push(tech);
+    return Promise.resolve({ ...tech });
+  },
+
+  async attachTechnology(projectId: string, technologyId: string): Promise<void> {
+    techCatalog ??= buildTechCatalog();
+    const project = (await ensureProjects()).find((p) => p.id === projectId);
+    const tech = techCatalog.find((t) => t.id === technologyId);
+    if (!project || !tech) return;
+    if (!project.technologies.some((t) => t.name === tech.name)) {
+      project.technologies.push({ id: tech.id, name: tech.name, category: tech.category });
+      project.updated_at = now();
+    }
+  },
+
+  async detachTechnology(projectId: string, technologyId: string): Promise<void> {
+    const project = (await ensureProjects()).find((p) => p.id === projectId);
+    if (!project) return;
+    // Seeded demo projects carry index-based tech ids, so match by
+    // catalog name as well as by id.
+    const catalogName = techCatalog?.find((t) => t.id === technologyId)?.name;
+    project.technologies = project.technologies.filter(
+      (t) => t.id !== technologyId && (catalogName === undefined || t.name !== catalogName),
+    );
+    project.updated_at = now();
+  },
+
+  async listNotes(projectId: string): Promise<LearningNote[]> {
+    return [...(await ensureNotes(projectId))];
+  },
+
+  async createNote(projectId: string, data: LearningNoteCreateInput): Promise<LearningNote> {
+    const notes = await ensureNotes(projectId);
+    const note: LearningNote = {
+      id: newId('n'),
+      project_id: projectId,
+      title: data.title,
+      content: data.content,
+      topic: data.topic ?? null,
+      created_at: now(),
+      updated_at: now(),
+    };
+    notes.unshift(note);
+    return { ...note };
+  },
+
+  async updateNote(noteId: string, patch: LearningNoteUpdateInput): Promise<LearningNote> {
+    for (const notes of notesByProject.values()) {
+      const note = notes.find((n) => n.id === noteId);
+      if (note) {
+        Object.assign(note, patch, { updated_at: now() });
+        return { ...note };
+      }
+    }
+    throw new Error('Demo note not found');
+  },
+
+  async deleteNote(noteId: string): Promise<void> {
+    for (const [projectId, notes] of notesByProject) {
+      if (notes.some((n) => n.id === noteId)) {
+        notesByProject.set(projectId, notes.filter((n) => n.id !== noteId));
+        return;
+      }
+    }
   },
 
   async getDashboardSummary(): Promise<DashboardSummary> {

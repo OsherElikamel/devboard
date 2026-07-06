@@ -11,10 +11,12 @@ import * as tasksService from '../services/tasks';
 import { dueLabel } from '../utils/format';
 import type { Task, TaskPriority } from '../types';
 import type { ProjectTaskGroup } from '../services/tasks';
+import { useDocumentTitle } from '../hooks/useDocumentTitle';
 
 type StatusFilter = 'all' | 'todo' | 'done';
 
 export default function TasksPage() {
+  useDocumentTitle('Tasks · DevBoard');
   const navigate = useNavigate();
   const { showError } = useToast();
   const [groups, setGroups] = useState<ProjectTaskGroup[]>([]);

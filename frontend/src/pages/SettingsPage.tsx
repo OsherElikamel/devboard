@@ -1,8 +1,10 @@
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import Topbar from '../components/layout/Topbar';
+import { useDocumentTitle } from '../hooks/useDocumentTitle';
 
 export default function SettingsPage() {
+  useDocumentTitle('Settings · DevBoard');
   const { user, isDemo, logout } = useAuth();
   const { theme, toggleTheme } = useTheme();
 

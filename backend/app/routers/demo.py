@@ -311,6 +311,47 @@ def demo_project_tasks(project_id: str):
     return tasks
 
 
+def _note(num, proj, title, content, topic, **time_kwargs):
+    return {
+        "id": f"n{num:04d}0000-0000-0000-0000-000000000001",
+        "project_id": proj,
+        "title": title,
+        "content": content,
+        "topic": topic,
+        "created_at": _ago(**time_kwargs),
+        "updated_at": _ago(**time_kwargs),
+    }
+
+
+DEMO_LEARNING_NOTES = {
+    _P1: [
+        _note(1001, _P1, "Docker Compose networking",
+              "Backend and PostgreSQL containers talk through the shared Compose network — the service name acts as the hostname. No need for links or manual IPs.",
+              "Docker", days=4),
+        _note(1002, _P1, "CSS custom properties for theming",
+              "Runtime theme switching is much cleaner with CSS variables than toggling Tailwind dark: classes everywhere. One class on <html>, tokens everywhere else.",
+              "CSS", days=3),
+    ],
+    _P3: [
+        _note(3001, _P3, "Normalized vs denormalized transactions",
+              "Going with a normalized schema for transactions, categories, and budgets. Reports can aggregate with a single GROUP BY instead of maintaining counters.",
+              "PostgreSQL", days=2),
+    ],
+    _P4: [
+        _note(4001, _P4, "Exponential backoff for flaky devices",
+              "Kiosks on weak connections drop requests constantly. Retry with exponential backoff plus jitter smoothed out the false-offline alerts.",
+              "Networking", days=5),
+    ],
+}
+
+
+@router.get("/projects/{project_id}/learning-notes")
+def demo_learning_notes(project_id: str):
+    if not any(p["id"] == project_id for p in DEMO_PROJECTS):
+        raise HTTPException(status_code=404, detail="Demo project not found")
+    return DEMO_LEARNING_NOTES.get(project_id, [])
+
+
 @router.get("/projects/{project_id}/activity")
 def demo_project_activity(project_id: str):
     activity = DEMO_ACTIVITY.get(project_id)

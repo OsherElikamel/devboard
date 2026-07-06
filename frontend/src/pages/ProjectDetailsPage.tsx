@@ -11,7 +11,10 @@ import Badge from '../components/ui/Badge';
 import ProgressBar from '../components/ui/ProgressBar';
 import PriorityDropdown from '../components/tasks/PriorityDropdown';
 import TaskDetailModal from '../components/tasks/TaskDetailModal';
+import TechnologyPicker from '../components/projects/TechnologyPicker';
+import LearningNotesPanel from '../components/projects/LearningNotesPanel';
 import { useToast } from '../contexts/ToastContext';
+import { useDocumentTitle } from '../hooks/useDocumentTitle';
 import * as projectsService from '../services/projects';
 import * as tasksService from '../services/tasks';
 import { timeAgo, dueLabel, parseLocalDate } from '../utils/format';
@@ -36,7 +39,7 @@ const STATUS_OPTIONS: { value: ProjectStatus; label: string }[] = [
 export default function ProjectDetailsPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { showError } = useToast();
+  const { showError, showSuccess } = useToast();
   const [project, setProject] = useState<Project | null>(null);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [activity, setActivity] = useState<ActivityItem[]>([]);
@@ -57,6 +60,9 @@ export default function ProjectDetailsPage() {
 
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [confirmingDeleteId, setConfirmingDeleteId] = useState<string | null>(null);
+  const [confirmingProjectDelete, setConfirmingProjectDelete] = useState(false);
+
+  useDocumentTitle(project ? `${project.title} · DevBoard` : 'DevBoard');
 
   useEffect(() => {
     if (!id) return;
@@ -182,6 +188,16 @@ export default function ProjectDetailsPage() {
   const handleTaskUpdate = (updated: Task) => {
     setTasks(prev => prev.map(t => t.id === updated.id ? updated : t));
     setSelectedTask(updated);
+  };
+
+  const deleteWholeProject = async () => {
+    if (!project) return;
+    setConfirmingProjectDelete(false);
+    try {
+      await projectsService.deleteProject(project.id);
+      showSuccess(`Deleted "${project.title}"`);
+      navigate('/projects');
+    } catch { showError('Failed to delete project'); }
   };
 
   if (loading) {
@@ -347,6 +363,13 @@ export default function ProjectDetailsPage() {
                   <ExternalLink size={14} /> Live
                 </a>
               )}
+              <button
+                onClick={() => setConfirmingProjectDelete(true)}
+                aria-label={`Delete project ${project.title}`}
+                className="p-2 rounded-lg border border-app-border text-app-text-muted hover:text-danger hover:border-danger/30 hover:bg-danger/5 transition-colors"
+              >
+                <Trash2 size={14} />
+              </button>
             </div>
           </div>
 
@@ -358,16 +381,11 @@ export default function ProjectDetailsPage() {
               </div>
               <ProgressBar value={project.progress} size="md" />
             </div>
-            <div>
-              <p className="text-sm text-app-text-muted mb-2">Tech Stack</p>
-              <div className="flex flex-wrap gap-1.5">
-                {project.technologies.map(tech => (
-                  <span key={tech.id} className="px-2.5 py-1 rounded-full text-xs font-[family-name:var(--font-tech)] border border-app-border text-app-text-secondary">
-                    {tech.name}
-                  </span>
-                ))}
-              </div>
-            </div>
+            <TechnologyPicker
+              projectId={project.id}
+              technologies={project.technologies}
+              onChanged={refreshProject}
+            />
             <div className="flex gap-6">
               {project.start_date && (
                 <div>
@@ -534,7 +552,34 @@ export default function ProjectDetailsPage() {
             </form>
           </div>
         </div>
+
+        <LearningNotesPanel projectId={project.id} />
       </div>
+
+      {confirmingProjectDelete && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={() => setConfirmingProjectDelete(false)}>
+          <div className="bg-app-surface rounded-2xl border border-app-border p-6 max-w-sm w-full space-y-4" onClick={e => e.stopPropagation()}>
+            <h4 className="text-lg font-semibold text-app-text">Delete project?</h4>
+            <p className="text-sm text-app-text-secondary">
+              <span className="text-app-text font-medium">{project.title}</span> and all of its tasks, comments, and notes will be deleted. This cannot be undone.
+            </p>
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={() => setConfirmingProjectDelete(false)}
+                className="px-4 py-2 rounded-xl text-sm font-medium text-app-text-secondary hover:bg-app-hover transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={deleteWholeProject}
+                className="px-4 py-2 rounded-xl text-sm font-medium bg-danger text-white hover:bg-danger/90 transition-colors"
+              >
+                Delete project
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <TaskDetailModal
         task={selectedTask}

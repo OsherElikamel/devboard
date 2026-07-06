@@ -3,8 +3,10 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { Code2, Mail, Lock } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import * as authService from '../services/auth';
+import { useDocumentTitle } from '../hooks/useDocumentTitle';
 
 export default function LoginPage() {
+  useDocumentTitle('Log in · DevBoard');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');

@@ -11,6 +11,7 @@ import ProgressBar from '../components/ui/ProgressBar';
 import { useAuth } from '../contexts/AuthContext';
 import { getDashboardSummary } from '../services/dashboard';
 import type { DashboardSummary, Project, ProjectStatus } from '../types';
+import { useDocumentTitle } from '../hooks/useDocumentTitle';
 
 type StatFilter = 'total' | 'active' | 'deployed';
 const STATUS_LABELS: Record<string, string> = {
@@ -28,6 +29,7 @@ const STAT_TITLES: Record<StatFilter, string> = {
 };
 
 export default function DashboardPage() {
+  useDocumentTitle('Dashboard · DevBoard');
   const { user, isDemo } = useAuth();
   const navigate = useNavigate();
   const [data, setData] = useState<DashboardSummary | null>(null);

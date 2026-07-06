@@ -5,6 +5,7 @@ import ProjectCard from '../components/projects/ProjectCard';
 import { useLayout } from '../contexts/LayoutContext';
 import { listProjects } from '../services/projects';
 import type { Project, ProjectStatus } from '../types';
+import { useDocumentTitle } from '../hooks/useDocumentTitle';
 
 const STATUS_FILTERS: { label: string; value: ProjectStatus | 'all' }[] = [
   { label: 'All', value: 'all' },
@@ -16,6 +17,7 @@ const STATUS_FILTERS: { label: string; value: ProjectStatus | 'all' }[] = [
 ];
 
 export default function ProjectsPage() {
+  useDocumentTitle('Projects · DevBoard');
   const { openCreateProject } = useLayout();
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
