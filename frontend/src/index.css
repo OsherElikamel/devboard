@@ -33,6 +33,22 @@
   --font-tech: 'Space Grotesk', ui-monospace, monospace;
 }
 
+/* Tell the browser which theme native widgets (select dropdowns,
+   date pickers, scrollbars) should render with — without this they
+   stay light in dark mode, e.g. a white select menu with white text. */
+:root.dark {
+  color-scheme: dark;
+}
+
+:root:not(.dark) {
+  color-scheme: light;
+}
+
+select option {
+  background-color: var(--color-app-surface);
+  color: var(--color-app-text);
+}
+
 /* Dark mode (default) */
 :root.dark {
   --color-app-bg: #0F1523;
