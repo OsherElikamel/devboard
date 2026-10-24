@@ -10,7 +10,7 @@ import type { LearningNoteCreateInput, LearningNoteUpdateInput } from './learnin
  *  Guest mode reads seed data from the public /api/demo endpoints once,
  *  then serves reads and applies mutations locally. This lets the demo
  *  behave exactly like a real account (create, edit, delete) without
- *  persisting anything — everything resets when the session ends.
+ *  persisting anything; everything resets when the session ends.
  */
 
 export function isDemoMode(): boolean {

@@ -138,7 +138,7 @@ export default function LearningNotesPanel({ projectId }: Props) {
           <textarea
             value={content}
             onChange={e => setContent(e.target.value)}
-            placeholder="The details — what clicked, what surprised you, what you'd do differently... *"
+            placeholder="The details: what clicked, what surprised you, what you'd do differently... *"
             required
             rows={3}
             maxLength={10000}
@@ -164,7 +164,7 @@ export default function LearningNotesPanel({ projectId }: Props) {
       ) : notes.length === 0 && !formOpen ? (
         <div className="px-6 py-10 text-center">
           <p className="text-sm text-app-text-muted">
-            No learning notes yet — capture what you learned building this project.
+            No learning notes yet. Capture what you learned building this project.
           </p>
         </div>
       ) : (

@@ -29,7 +29,7 @@ export async function listProjectTasks(projectId: string): Promise<Task[]> {
   return res.data as Task[];
 }
 
-/** All of the user's tasks grouped by project — two requests, not one per project. */
+/** All of the user's tasks grouped by project: two requests, not one per project. */
 export async function listTaskGroups(): Promise<ProjectTaskGroup[]> {
   if (isDemoMode()) return demoStore.listTaskGroups();
   const [projects, tasksRes] = await Promise.all([listProjects(), api.get('/tasks')]);

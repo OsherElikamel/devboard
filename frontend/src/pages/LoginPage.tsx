@@ -59,7 +59,7 @@ export default function LoginPage() {
 
           {sessionExpired && !error && (
             <div className="mb-4 p-3 rounded-xl bg-warning/10 border border-warning/20 text-warning text-sm">
-              Your session expired — please log in again.
+              Your session expired. Please log in again.
             </div>
           )}
           {error && <div className="mb-4 p-3 rounded-xl bg-danger/10 border border-danger/20 text-danger text-sm">{error}</div>}

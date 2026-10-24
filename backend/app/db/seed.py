@@ -67,7 +67,7 @@ def seed():
             db.add(ProjectTechnology(project_id=p1.id, technology_id=techs[tech_name].id))
 
         tasks_p1 = [
-            # Backend — all done
+            # Backend: all done
             ("Set up project structure", True, "high"),
             ("Create database models", True, "high"),
             ("Implement JWT authentication", True, "high"),
@@ -81,7 +81,7 @@ def seed():
             ("Add demo mode endpoints", True, "medium"),
             ("Set up Docker Compose", True, "high"),
             ("Write Alembic migrations", True, "medium"),
-            # Frontend — all done
+            # Frontend: all done
             ("Design login and register pages", True, "medium"),
             ("Design dashboard page", True, "medium"),
             ("Build project cards and projects page", True, "medium"),

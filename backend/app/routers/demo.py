@@ -219,19 +219,19 @@ def _activity(num, proj, typ, user, content, **time_kwargs):
 
 DEMO_ACTIVITY = {
     _P1: [
-        _activity(1001, _P1, "comment", "Alex", "The demo mode is working great — guest users can explore without signing up. Moving on to the theme toggle next.", hours=6),
+        _activity(1001, _P1, "comment", "Alex", "The demo mode is working great: guest users can explore without signing up. Moving on to the theme toggle next.", hours=6),
         _activity(1002, _P1, "task_completed", "Alex", "Completed: Add responsive layout breakpoints", hours=8),
         _activity(1003, _P1, "task_completed", "Alex", "Completed: Implement guest demo mode", days=1),
-        _activity(1004, _P1, "deployment", "Alex", "Deployed latest build to Render — dashboard and project views are live", days=1),
+        _activity(1004, _P1, "deployment", "Alex", "Deployed latest build to Render. Dashboard and project views are live", days=1),
         _activity(1005, _P1, "commit", "Alex", "Pushed 4 commits: sidebar nav, stat cards, demo endpoints", days=2),
         _activity(1006, _P1, "task_completed", "Alex", "Completed: Build sidebar navigation", days=2),
         _activity(1007, _P1, "comment", "Alex", "Decided to use CSS custom properties for theming instead of Tailwind's dark: variant directly. Much cleaner for runtime switching.", days=3),
         _activity(1008, _P1, "task_completed", "Alex", "Completed: Set up Docker Compose orchestration", days=4),
         _activity(1009, _P1, "status_change", "Alex", "Changed project status from idea → in_progress", days=5),
-        _activity(1010, _P1, "comment", "Alex", "Backend API is solid — 19 endpoints, all tested. Time to focus on the frontend polish.", days=6),
+        _activity(1010, _P1, "comment", "Alex", "Backend API is solid: 19 endpoints, all tested. Time to focus on the frontend polish.", days=6),
     ],
     _P2: [
-        _activity(2001, _P2, "deployment", "Alex", "Final deployment to Netlify — custom domain configured and live!", days=15),
+        _activity(2001, _P2, "deployment", "Alex", "Final deployment to Netlify. Custom domain configured and live!", days=15),
         _activity(2002, _P2, "task_completed", "Alex", "Completed: Configure custom domain and SSL", days=15),
         _activity(2003, _P2, "task_completed", "Alex", "Completed: Add downloadable resume button", days=16),
         _activity(2004, _P2, "comment", "Alex", "All 12 tasks done! Portfolio is fully deployed. Time to share it.", days=15),
@@ -240,13 +240,13 @@ DEMO_ACTIVITY = {
         _activity(2007, _P2, "commit", "Alex", "Pushed 6 commits: blog section, dark mode, SEO tags", days=18),
         _activity(2008, _P2, "comment", "Alex", "Blog section looks great with MDX. Added syntax highlighting for code snippets too.", days=19),
         _activity(2009, _P2, "task_completed", "Alex", "Completed: Optimize images with lazy loading", days=22),
-        _activity(2010, _P2, "deployment", "Alex", "First staging deployment to Netlify — testing CI/CD pipeline", days=30),
+        _activity(2010, _P2, "deployment", "Alex", "First staging deployment to Netlify, testing the CI/CD pipeline", days=30),
     ],
     _P3: [
         _activity(3001, _P3, "task_completed", "Alex", "Completed: Define API requirements and endpoints", days=2),
         _activity(3002, _P3, "comment", "Alex", "Decided to start with the database schema design. Going with a normalized approach for transactions, categories, and budgets.", days=2),
         _activity(3003, _P3, "comment", "Alex", "Looked into existing expense tracker APIs for inspiration. Planning to add recurring transaction support later.", days=5),
-        _activity(3004, _P3, "status_change", "Alex", "Created project — starting with requirements planning", days=7),
+        _activity(3004, _P3, "status_change", "Alex", "Created project, starting with requirements planning", days=7),
     ],
     _P4: [
         _activity(4001, _P4, "comment", "Alex", "Almost done! Just need the performance monitoring dashboard and batch firmware updates. Should be ready for production by next week.", days=1),
@@ -326,7 +326,7 @@ def _note(num, proj, title, content, topic, **time_kwargs):
 DEMO_LEARNING_NOTES = {
     _P1: [
         _note(1001, _P1, "Docker Compose networking",
-              "Backend and PostgreSQL containers talk through the shared Compose network — the service name acts as the hostname. No need for links or manual IPs.",
+              "Backend and PostgreSQL containers talk through the shared Compose network, where the service name acts as the hostname. No need for links or manual IPs.",
               "Docker", days=4),
         _note(1002, _P1, "CSS custom properties for theming",
               "Runtime theme switching is much cleaner with CSS variables than toggling Tailwind dark: classes everywhere. One class on <html>, tokens everywhere else.",
@@ -391,7 +391,7 @@ DEMO_TASK_COMMENTS = {
     ],
     "t30030000-0000-0000-0000-000000000001": [
         _task_comment(6, "t30030000-0000-0000-0000-000000000001", "Alex",
-                      "Going with a clean architecture approach — separate routers, services, and schemas directories.", days=6),
+                      "Going with a clean architecture approach: separate routers, services, and schemas directories.", days=6),
     ],
 }
 

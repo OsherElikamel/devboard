@@ -33,7 +33,7 @@
 }
 
 /* Tell the browser which theme native widgets (select dropdowns,
-   date pickers, scrollbars) should render with — without this they
+   date pickers, scrollbars) should render with; without this they
    stay light in dark mode, e.g. a white select menu with white text. */
 :root.dark {
   color-scheme: dark;

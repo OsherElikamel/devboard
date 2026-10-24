@@ -18,7 +18,7 @@ export default function AppShell() {
             {isDemo && (
               <div className="flex items-center justify-center gap-2 px-4 py-1.5 bg-warning/10 border-b border-warning/20 text-warning text-xs font-medium">
                 <Eye size={13} />
-                Demo mode — explore and edit freely, nothing is saved.
+                Demo mode: explore and edit freely, nothing is saved.
               </div>
             )}
             <Outlet />

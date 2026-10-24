@@ -8,7 +8,7 @@ A full-stack developer dashboard for tracking projects, tasks, and progress. Bui
 ![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker&logoColor=white)
 ![TypeScript](https://img.shields.io/badge/TypeScript-6.0-3178C6?logo=typescript&logoColor=white)
 
-**[Live Demo](https://devboard-frontend-tagh.onrender.com)** — hosted on Render (free tier, may take ~30s to wake)
+**[Live Demo](https://devboard-frontend-tagh.onrender.com)** (hosted on Render's free tier, so it may take about 30 seconds to wake)
 
 ![Dashboard](docs/main_dahsboard.png)
 
@@ -40,17 +40,17 @@ A full-stack developer dashboard for tracking projects, tasks, and progress. Bui
 
 ## Features
 
-- **Project Management** — Create, edit, and delete projects with status, progress tracking, and inline editing of titles, descriptions, and status badges
-- **Task System** — Full task CRUD with priority levels (high/medium/low), due dates, completion tracking, and a cross-project tasks view
-- **Task Detail View** — ClickUp-inspired task modal with inline-editable title, description, priority dropdown, and per-task comments
-- **Tech Stack Tags** — Searchable technology picker per project; create new technologies inline and attach/detach with one click
-- **Learning Notes** — Capture what you learned building each project, with topic tags and inline editing
-- **Activity Feed** — Project-level comment threads with timestamped activity history
-- **Dashboard** — Stat cards, clickable project-status donut chart, tech stack filters, and task completion metrics
-- **Guest Demo Mode** — Fully interactive demo without an account: create, edit, and delete freely; nothing is persisted
-- **JWT Authentication** — Login/register with bcrypt password hashing and per-IP rate limiting on auth endpoints
-- **Dark/Light Theme** — Persistent theme toggle built on CSS custom properties (native widgets included via `color-scheme`)
-- **Responsive & Accessible** — Mobile-friendly slide-out sidebar, keyboard-navigable controls with visible focus rings, labelled icon buttons
+- **Project Management:** Create, edit, and delete projects with status, progress tracking, and inline editing of titles, descriptions, and status badges
+- **Task System:** Full task CRUD with priority levels (high/medium/low), due dates, completion tracking, and a cross-project tasks view
+- **Task Detail View:** ClickUp-inspired task modal with inline-editable title, description, priority dropdown, and per-task comments
+- **Tech Stack Tags:** Searchable technology picker per project; create new technologies inline and attach/detach with one click
+- **Learning Notes:** Capture what you learned building each project, with topic tags and inline editing
+- **Activity Feed:** Project-level comment threads with timestamped activity history
+- **Dashboard:** Stat cards, clickable project-status donut chart, tech stack filters, and task completion metrics
+- **Guest Demo Mode:** Fully interactive demo without an account: create, edit, and delete freely; nothing is persisted
+- **JWT Authentication:** Login/register with bcrypt password hashing and per-IP rate limiting on auth endpoints
+- **Dark/Light Theme:** Persistent theme toggle built on CSS custom properties (native widgets included via `color-scheme`)
+- **Responsive & Accessible:** Mobile-friendly slide-out sidebar, keyboard-navigable controls with visible focus rings, labelled icon buttons
 
 ## Tech Stack
 
@@ -73,7 +73,7 @@ A full-stack developer dashboard for tracking projects, tasks, and progress. Bui
 - slowapi (rate limiting)
 
 ### Infrastructure
-- Docker Compose for local development (frontend, backend, db, pgadmin — hot reload everywhere)
+- Docker Compose for local development (frontend, backend, db and pgAdmin, with hot reload everywhere)
 - Production: Render (static frontend + backend web service) with Neon serverless PostgreSQL
 
 ## Quick Start
@@ -102,7 +102,7 @@ A full-stack developer dashboard for tracking projects, tasks, and progress. Bui
 
 ### Demo Login
 - Click **"Explore Demo Board"** on the login page for instant access with pre-populated data
-- In local development (`docker compose up`), a seeded account is also available: `alex@devboard.dev` / `demo1234` — seeding only runs when `SEED_DEMO_DATA=true`
+- In local development (`docker compose up`), a seeded account is also available: `alex@devboard.dev` / `demo1234` (seeding only runs when `SEED_DEMO_DATA=true`)
 
 ## Project Structure
 
@@ -223,7 +223,7 @@ devboard/
 | `ACCESS_TOKEN_EXPIRE_MINUTES` | Token expiry time | `60` |
 | `BACKEND_CORS_ORIGINS` | Allowed CORS origins (JSON array) | `["http://localhost:5173"]` |
 | `ADMIN_EMAIL` | Email of the admin user (enables `/api/admin` endpoints) | _(none)_ |
-| `SEED_DEMO_DATA` | Seed demo user/projects on startup (dev only — never enable in production) | `false` |
+| `SEED_DEMO_DATA` | Seed demo user/projects on startup (dev only, never enable in production) | `false` |
 | `RATE_LIMIT_ENABLED` | Per-IP rate limiting on auth endpoints (login 5/min, register 20/hour) | `true` |
 
 ### Frontend (`frontend/.env.example`)
@@ -235,9 +235,9 @@ devboard/
 
 The live instance runs on free tiers:
 
-- **Frontend** — Render static site built from `frontend/` (`npm run build`, publish `dist/`), with a rewrite rule sending all paths to `/index.html` for SPA routing
-- **Backend** — Render web service running `alembic upgrade head && python -m app.db.seed && uvicorn app.main:app --host 0.0.0.0 --port $PORT` (migrations run on every deploy; seeding is a no-op unless `SEED_DEMO_DATA=true`)
-- **Database** — [Neon](https://neon.tech) serverless PostgreSQL (the config layer normalizes `postgres://` URLs to the `psycopg` driver automatically)
+- **Frontend:** Render static site built from `frontend/` (`npm run build`, publish `dist/`), with a rewrite rule sending all paths to `/index.html` for SPA routing
+- **Backend:** Render web service running `alembic upgrade head && python -m app.db.seed && uvicorn app.main:app --host 0.0.0.0 --port $PORT` (migrations run on every deploy; seeding is a no-op unless `SEED_DEMO_DATA=true`)
+- **Database:** [Neon](https://neon.tech) serverless PostgreSQL (the config layer normalizes `postgres://` URLs to the `psycopg` driver automatically)
 
 Backend env vars on Render: everything from the table above, plus `FORWARDED_ALLOW_IPS=*` so uvicorn trusts Render's proxy headers and rate limiting sees real client IPs.
 

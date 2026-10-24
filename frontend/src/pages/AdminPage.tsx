@@ -27,7 +27,7 @@ export default function AdminPage() {
       setUsers(users);
       setProjects(projects);
     } catch {
-      setError('Access denied — admin only.');
+      setError('Access denied: admins only.');
     } finally {
       setLoading(false);
     }
